@@ -1,0 +1,174 @@
+/* ── Tailwind directives ──────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Cyberpunk Neo-Brutalist Design System Tokens ───────────────────────── */
+:root {
+  --color-obsidian: #090A0D;
+  --color-onyx: #111318;
+  --color-carbon: #181B22;
+  --color-graphite: #262A34;
+  --color-slate: #383E4C;
+  --color-smoke: #52596A;
+  --color-ash: #8E93A0;
+  --color-steel: #B2B7C2;
+  --color-fog: #A6ABB8;
+  --color-bone: #EFEFEB;
+  --color-paper-white: #FFFFFF;
+
+  /* Industrial Accent Accents from Reference */
+  --color-cb-orange: #E28743;
+  --color-cb-amber: #F2A900;
+  --color-cb-green: #5B8E69;
+  --color-cb-red: #D64038;
+  --color-cb-blue: #3370FF;
+
+  /* Bridges to previous CSS properties */
+  --bg: #090A0D;
+  --surface: #111318;
+  --surface-2: #181B22;
+  --ink: #FFFFFF;
+  --ink-2: #EFEFEB;
+  --ink-muted: #8E93A0;
+  --hairline: #262A34;
+  --grid: #262A34;
+  --accent: #E28743;
+
+  /* Typography */
+  --font-bebas: 'Bebas Neue', Impact, sans-serif;
+  --font-syne: 'Syne', sans-serif;
+  --font-space: 'Space Grotesk', sans-serif;
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-jetbrains-mono: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-obsidian);
+    color: var(--color-bone);
+    font-family: var(--font-inter);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Extreme high-impact display headlines (Bebas / Syne) */
+  .font-display-hero {
+    font-family: var(--font-bebas);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .font-brutal-title {
+    font-family: var(--font-syne);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  .font-tech-label {
+    font-family: var(--font-space);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  /* Grid pattern backdrop for neo-brutalist tech look */
+  .grid-bg {
+    background-image: 
+      linear-gradient(to right, rgba(38, 42, 52, 0.4) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(38, 42, 52, 0.4) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+}
+
+@layer components {
+  /* ── Industrial Label Decals & Badges ───────────────────────────────────── */
+  .decal-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider rounded-md border;
+  }
+  .decal-orange {
+    @apply decal-badge text-black bg-cb-orange border-cb-orange;
+  }
+  .decal-amber {
+    @apply decal-badge text-black bg-cb-amber border-cb-amber;
+  }
+  .decal-green {
+    @apply decal-badge text-white bg-cb-green border-cb-green;
+  }
+  .decal-red {
+    @apply decal-badge text-white bg-cb-red border-cb-red;
+  }
+  .decal-dark {
+    @apply decal-badge text-cb-orange bg-carbon border-graphite;
+  }
+
+  /* ── Cyberpunk / Industrial Modular Cards ──────────────────────────────── */
+  .neo-card {
+    @apply rounded-[18px] bg-onyx border-2 border-graphite p-6 relative transition-all duration-200;
+  }
+  .neo-card:hover {
+    @apply border-cb-orange/80 -translate-y-0.5;
+    box-shadow: 4px 4px 0px 0px #E28743;
+  }
+
+  .neo-tag-orange {
+    @apply rounded-[18px] bg-cb-orange text-black p-5 border-2 border-black;
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+
+  .neo-tag-green {
+    @apply rounded-[18px] bg-cb-green text-white p-5 border-2 border-black;
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+
+  .neo-tag-light {
+    @apply rounded-[18px] bg-bone text-black p-5 border-2 border-black;
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+
+  /* ── Buttons (Sharp / Heavy Industrial) ────────────────────────────────── */
+  .neo-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5
+           font-tech text-sm font-bold uppercase tracking-wider
+           bg-cb-orange text-black border-2 border-black rounded-lg
+           transition-all duration-150 active:translate-x-0.5 active:translate-y-0.5;
+    box-shadow: 4px 4px 0px 0px #FFFFFF;
+  }
+  .neo-btn-primary:hover:not(:disabled) {
+    background-color: #F2A900;
+  }
+
+  .neo-btn-white {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5
+           font-tech text-sm font-bold uppercase tracking-wider
+           bg-white text-black border-2 border-black rounded-lg
+           transition-all duration-150 active:translate-x-0.5 active:translate-y-0.5;
+    box-shadow: 4px 4px 0px 0px #E28743;
+  }
+  .neo-btn-white:hover:not(:disabled) {
+    background-color: #EFEFEB;
+  }
+
+  .neo-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3
+           font-mono text-xs font-bold uppercase tracking-wider
+           border-2 border-graphite bg-surface text-bone rounded-lg
+           hover:border-white hover:text-white transition-all;
+  }
+
+  /* ── Form Inputs ───────────────────────────────────────────────────────── */
+  .neo-input {
+    @apply w-full rounded-lg px-4 py-3.5 text-sm font-mono
+           bg-carbon border-2 border-graphite text-bone
+           placeholder:text-ash focus:outline-none focus:border-cb-orange
+           transition-colors duration-150;
+  }
+
+  /* ── Ticker Ribbon ─────────────────────────────────────────────────────── */
+  .ticker-wrap {
+    @apply w-full overflow-hidden whitespace-nowrap border-y-2 border-black bg-black py-2.5 font-tech text-xs tracking-widest text-white uppercase;
+  }
+}
