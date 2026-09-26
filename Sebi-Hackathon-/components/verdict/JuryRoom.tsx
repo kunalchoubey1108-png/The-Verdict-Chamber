@@ -286,62 +286,78 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
         </section>
 
         {/* 4. SIDEBAR: Sticky Verdict HUD */}
-        <div className="lg:sticky lg:top-24 space-y-4">
-          {verdictCard && evidencePack ? (
-            <VerdictCard verdict={verdictCard} evidencePack={evidencePack} />
-          ) : (
-            <div className="rounded-[18px] bg-carbon border-2 border-graphite p-6 text-center space-y-4" style={{ boxShadow: '4px 4px 0px 0px #262A34' }}>
-              <div className="w-14 h-14 rounded-[12px] bg-black border-2 border-graphite mx-auto flex items-center justify-center text-2xl">
-                ⚖️
-              </div>
-              <div className="space-y-2">
-                <div className="font-display text-lg text-white uppercase tracking-wider">
-                  {phase === "deliberating"
-                    ? "Chamber in Session"
-                    : "Decision Docket"}
-                </div>
-                <p className="text-xs font-mono text-raw-dim leading-relaxed uppercase tracking-wider">
-                  The Presiding Judge will deliver the final binding decree once cross-examination concludes.
-                </p>
-              </div>
+        <div className="lg:sticky lg:top-24 space-y-4 group/sidebar transition-all duration-300">
+          {/* Collapsed docket tab shown when not hovered on desktop */}
+          <div className="hidden lg:flex group-hover/sidebar:hidden rounded-[14px] bg-carbon border-2 border-graphite p-4 items-center justify-between cursor-pointer hover:border-cb-orange/80 transition-all shadow-brutal">
+            <div className="flex items-center gap-2.5">
+              <span className="text-lg">⚖️</span>
+              <span className="font-display text-sm text-white uppercase tracking-wider">
+                {verdictCard ? "BINDING VERDICT DOCKET" : "DECISION DOCKET"}
+              </span>
+            </div>
+            <span className="decal-orange px-2 py-0.5 text-[9px] animate-pulse">
+              HOVER TO REVEAL
+            </span>
+          </div>
 
-              {phase === "deliberating" && (
-                <div className="pt-2 flex flex-col items-center gap-2">
-                  <div className="flex gap-1.5">
-                    <span className="typing-dot" />
-                    <span className="typing-dot" />
-                    <span className="typing-dot" />
+          {/* Full sidebar content revealed on hover (desktop) or always on mobile */}
+          <div className="space-y-4 lg:hidden lg:group-hover/sidebar:block animate-fade-in">
+            {verdictCard && evidencePack ? (
+              <VerdictCard verdict={verdictCard} evidencePack={evidencePack} />
+            ) : (
+              <div className="rounded-[18px] bg-carbon border-2 border-graphite p-6 text-center space-y-4" style={{ boxShadow: '4px 4px 0px 0px #262A34' }}>
+                <div className="w-14 h-14 rounded-[12px] bg-black border-2 border-graphite mx-auto flex items-center justify-center text-2xl">
+                  ⚖️
+                </div>
+                <div className="space-y-2">
+                  <div className="font-display text-lg text-white uppercase tracking-wider">
+                    {phase === "deliberating"
+                      ? "Chamber in Session"
+                      : "Decision Docket"}
                   </div>
-                  <span className="text-[10px] font-tech text-cb-orange uppercase tracking-widest">
-                    Hearing Testimonies…
-                  </span>
+                  <p className="text-xs font-mono text-raw-dim leading-relaxed uppercase tracking-wider">
+                    The Presiding Judge will deliver the final binding decree once cross-examination concludes.
+                  </p>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* Action Row */}
-          {phase === "verdict" && (
-            <div className="flex flex-col sm:flex-row gap-2 font-mono text-xs pt-1">
-              <a
-                href="/verdict/new"
-                className="neo-btn-primary flex-1 justify-center py-3 text-center text-xs"
-              >
-                ASSESS ANOTHER STOCK →
-              </a>
-              <button
-                type="button"
-                onClick={handleShare}
-                className="neo-btn-ghost justify-center py-3 text-xs px-4"
-                title="Copy share link"
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  {copiedLink ? "check" : "share"}
-                </span>
-                <span>{copiedLink ? "Copied" : "Share"}</span>
-              </button>
-            </div>
-          )}
+                {phase === "deliberating" && (
+                  <div className="pt-2 flex flex-col items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                    </div>
+                    <span className="text-[10px] font-tech text-cb-orange uppercase tracking-widest">
+                      Hearing Testimonies…
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action Row */}
+            {phase === "verdict" && (
+              <div className="flex flex-col sm:flex-row gap-2 font-mono text-xs pt-1">
+                <a
+                  href="/verdict/new"
+                  className="neo-btn-primary flex-1 justify-center py-3 text-center text-xs"
+                >
+                  ASSESS ANOTHER STOCK →
+                </a>
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="neo-btn-ghost justify-center py-3 text-xs px-4"
+                  title="Copy share link"
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    {copiedLink ? "check" : "share"}
+                  </span>
+                  <span>{copiedLink ? "Copied" : "Share"}</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

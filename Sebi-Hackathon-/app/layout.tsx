@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./styles.css";
+import { SidebarToggle } from "@/components/SidebarToggle";
 
 export const metadata = {
   title: "The Verdict Chamber — Pre-Trade Risk Intelligence",
@@ -32,6 +33,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <SidebarToggle />
         {children}
         {/* dotLottie web component — used by NiveshOS onboarding */}
         <script
