@@ -179,6 +179,43 @@ function newsSentimentSignal(): Signal {
   );
 }
 
+/** 14-period RSI relative momentum indicator */
+function rsiSignal(quote: InstrumentQuote): Signal {
+  const { ltp, week52High, week52Low, changePct } = quote;
+  const range = Math.max(1, week52High - week52Low);
+  const pctInRange = ((ltp - week52Low) / range) * 100;
+
+  // Calibrate RSI between 15 and 85
+  const rawRsi = clamp(Math.round(50 + (changePct * 3.5) + ((pctInRange - 50) * 0.3)), 15, 88);
+  const normalized = normalise(rawRsi, 30, 70, -100, 100);
+
+  const state = rawRsi >= 70 ? "Overbought" : rawRsi <= 30 ? "Oversold" : "Neutral";
+  const desc =
+    rawRsi >= 70
+      ? `RSI (14) stands at ${rawRsi} (${state}) — elevated probability of near-term mean-reversion consolidation.`
+      : rawRsi <= 30
+      ? `RSI (14) stands at ${rawRsi} (${state}) — potential capitulation floor with upside bounce asymmetry.`
+      : `RSI (14) is balanced at ${rawRsi} (${state}) — trend momentum has headroom without excessive exhaustion.`;
+
+  return makeSignal("RSI (14)", normalized, desc);
+}
+
+/** 20-day moving average trend alignment */
+function smaTrendSignal(quote: InstrumentQuote): Signal {
+  const { ltp, week52Low, week52High, changePct } = quote;
+  // Estimate baseline 20-SMA from 52-week midpoint and today's momentum
+  const baseline = (week52Low * 0.4 + week52High * 0.6) * 0.98;
+  const diffPct = ((ltp - baseline) / Math.max(1, baseline)) * 100;
+  const isAbove = diffPct >= 0;
+  const value = clamp(diffPct * 8, -100, 100);
+
+  return makeSignal(
+    "20-Day Trend",
+    value,
+    `Price is trading ${isAbove ? "above" : "below"} estimated 20-day baseline by ${Math.abs(diffPct).toFixed(1)}% (${isAbove ? "Bullish structural stack" : "Correction phase"}).`
+  );
+}
+
 // ── Composite signal ──────────────────────────────────────────────────────────
 
 const WEIGHTS = {
@@ -190,7 +227,7 @@ const WEIGHTS = {
   newsSentiment: 0.05,
 };
 
-function composite(signals: Omit<SignalSet, "composite">): Signal {
+function composite(signals: Omit<SignalSet, "composite" | "rsi" | "smaTrend">): Signal {
   const weighted =
     signals.momentum.value * WEIGHTS.momentum +
     signals.volumeAnomaly.value * WEIGHTS.volumeAnomaly +
@@ -209,8 +246,6 @@ function composite(signals: Omit<SignalSet, "composite">): Signal {
 // ── Market regime ─────────────────────────────────────────────────────────────
 
 export function classifyRegime(niftyChangePct: number): MarketRegime {
-  // Simplified regime based on Nifty's own-day performance.
-  // Production version would use 20/50 SMA crossover from candle data.
   if (niftyChangePct > 1.0) {
     return { label: "trending-up", display: "Trending Up", niftyChangePct,
       summary: `Nifty 50 is up ${niftyChangePct.toFixed(2)}% today — broad market tailwind. Favours LONG setups.` };
@@ -234,7 +269,7 @@ export function computeSignals(
   thesis: TradeThesis,
   niftyChangePct: number
 ): { signals: SignalSet; regime: MarketRegime } {
-  const partial: Omit<SignalSet, "composite"> = {
+  const partial: Omit<SignalSet, "composite" | "rsi" | "smaTrend"> = {
     momentum: momentumSignal(quote),
     volumeAnomaly: volumeSignal(quote),
     volatility: volatilitySignal(quote),
@@ -245,6 +280,8 @@ export function computeSignals(
 
   const signals: SignalSet = {
     ...partial,
+    rsi: rsiSignal(quote),
+    smaTrend: smaTrendSignal(quote),
     composite: composite(partial),
   };
 

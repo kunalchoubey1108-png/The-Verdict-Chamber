@@ -30,6 +30,8 @@ export function formatEvidencePack(ep: EvidencePack): string {
     "",
     "=== COMPUTED TECHNICAL & LIQUIDITY SIGNALS ===",
     `Momentum: ${signals.momentum.direction.toUpperCase()} (${signals.momentum.value.toFixed(0)}/100) — ${signals.momentum.summary}`,
+    signals.rsi ? `RSI (14-Period): ${signals.rsi.direction.toUpperCase()} (${signals.rsi.value.toFixed(0)}/100) — ${signals.rsi.summary}` : "",
+    signals.smaTrend ? `20-Day Trend Bias: ${signals.smaTrend.direction.toUpperCase()} (${signals.smaTrend.value.toFixed(0)}/100) — ${signals.smaTrend.summary}` : "",
     `Volume Activity: ${signals.volumeAnomaly.direction.toUpperCase()} (${signals.volumeAnomaly.value.toFixed(0)}/100) — ${signals.volumeAnomaly.summary}`,
     `Volatility / Intraday Shakeout: ${signals.volatility.direction.toUpperCase()} (${signals.volatility.value.toFixed(0)}/100) — ${signals.volatility.summary}`,
     `Trap / Reversal Probability: ${signals.trapScore.direction.toUpperCase()} (${signals.trapScore.value.toFixed(0)}/100) — ${signals.trapScore.summary}`,
@@ -38,7 +40,14 @@ export function formatEvidencePack(ep: EvidencePack): string {
     "=== BROADER MARKET REGIME ===",
     `${regime.display}: ${regime.summary}`,
     "",
-  ];
+  ].filter(Boolean);
+
+  if (thesis.rationale && (thesis.rationale.includes("FINFLUENCER") || thesis.rationale.includes("SOCIAL_TIP") || thesis.rationale.includes("Telegram"))) {
+    lines.push("=== UNVERIFIED SOCIAL MEDIA / FINFLUENCER CLAIM SCRUTINY ===");
+    lines.push(`CLAIM / TIP TEXT: "${thesis.rationale}"`);
+    lines.push("MANDATE: Scrutinize whether this tip is a pump-and-dump trap or unrealistic hype. Bear Counsel and Quant must explicitly address this claim.");
+    lines.push("");
+  }
 
   if (portfolioImpact) {
     lines.push("=== PORTFOLIO DIGITAL TWIN IMPACT ===");

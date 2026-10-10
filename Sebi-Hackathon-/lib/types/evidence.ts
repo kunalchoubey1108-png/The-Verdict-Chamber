@@ -58,6 +58,8 @@ export interface SignalSet {
   riskReward: Signal;
   trapScore: Signal;
   newsSentiment: Signal;
+  rsi?: Signal;
+  smaTrend?: Signal;
   /** Composite signal — weighted average of all */
   composite: Signal;
 }
