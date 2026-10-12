@@ -1,0 +1,68 @@
+# README.ai — The Verdict Chamber
+
+This file is a working guide for coding agents. Prefer the source code and `package.json` as the source of truth when they disagree with prose docs.
+
+## Project at a glance
+
+The Verdict Chamber is a Next.js 15 / React 19 app for pre-trade stock analysis. A user submits an instrument and proposed allocation; the server assembles market evidence and signals, then runs a sequential five-role jury (Bull, Bear, Risk, Quant, Judge). Results stream to the UI as server-sent events. The app can use Google Gemini or deterministic simulated arguments when no Gemini key is configured.
+
+The actual app lives in this directory. `README.md` currently documents a different, older vanilla NiveshOS prototype (`index.html`, `data.js`, etc.); those files are not present here. Do not use that README's run instructions or architecture as guidance for this Next.js app.
+
+## Setup and commands
+
+- Node.js and npm are required. Dependencies are declared in `package.json`; the lockfile is `package-lock.json`.
+- Install: `npm install`
+- Develop: `npm run dev` (Next.js at `http://localhost:3000` by default)
+- Production build: `npm run build`; serve it with `npm start`
+- Type check: `npm run typecheck`
+- `npm run lint` is declared, but verify compatibility with the installed Next.js version before relying on it (`next lint` may not be available in every Next.js 15 setup).
+
+Copy `.env.local.example` to `.env.local` for local configuration. Supported server-side keys include `GOOGLE_GENERATIVE_AI_API_KEY` (or `GEMINI_API_KEY`) for Gemini and `FINNHUB_API_KEY` for live equity quotes. `GEMINI_MODEL` optionally selects the model; the implementation defaults to `gemini-1.5-flash`. `NEXT_PUBLIC_DEMO_MODE` is documented in the example as an optional demo toggle; confirm its current use in source before changing behavior. Never commit `.env.local` or expose server keys through `NEXT_PUBLIC_` variables.
+
+## Main user flow and routes
+
+- `/` — landing page and entry point.
+- `/verdict/new` — thesis submission.
+- `/verdict/[id]` — verdict detail / jury experience.
+- `/verdict/history` — saved verdict history.
+- `POST /api/evidence` — builds the evidence pack for a submitted thesis.
+- `POST /api/jury` — validates an evidence pack and streams jury events as SSE.
+- `GET /api/quotes` — quote endpoint (implementation is JavaScript).
+
+Follow the route files for exact request and response shapes; the API handlers are authoritative.
+
+## Architecture map
+
+- `app/` — App Router pages, layouts, styles, and API route handlers.
+- `components/verdict/` — thesis form, jury room, juror display, evidence summary, verdict card, stock cockpit, and thesis-killer simulator.
+- `lib/agents/prompts.ts` — role instructions and evidence-pack serialization.
+- `lib/agents/orchestrate.ts` — sequential jury orchestration, Gemini integration, deterministic fallback, and event emission.
+- `lib/signals/` — quote retrieval, technical signal calculations, and portfolio impact analysis.
+- `lib/types/` — shared thesis, evidence, and verdict contracts.
+- `lib/validation/thesis.ts` — input validation; keep API-boundary validation aligned with this schema.
+- `lib/utils/` — formatting, storage, audio, and class-name helpers.
+
+Import aliases use `@/*` mapped to the repository root. Keep shared contracts in `lib/types` and avoid duplicating them in components or route handlers.
+
+## Important implementation details
+
+- The jury is intentionally sequential: each later agent receives the evidence plus prior counsel outputs. Preserve that order and the typed event protocol when editing orchestration.
+- The UI consumes jury progress incrementally. If changing event names or payloads, update both `lib/types/verdict.ts`, the API route, and the client consumer together.
+- Evidence assembly and signal calculations are separate from LLM prose. Keep numeric computations in `lib/signals`; prompts should present supplied evidence rather than inventing values.
+- Gemini credentials are read server-side by the orchestrator. Missing credentials should continue to use the simulated path unless the product behavior is deliberately changed.
+- Quote data may be live or fallback/mock. Preserve and surface freshness/source metadata (`isLive`, `asOf`) rather than presenting fallback values as live.
+- Browser persistence helpers are in `lib/utils/storage.ts`; account for server rendering and browser-only APIs when changing callers.
+- Financial output is informational pre-trade decision support, not personalized investment advice. Preserve the disclaimer language in agent prompts and the product UI.
+
+## Working conventions for agents
+
+- Inspect the specific route, component, and shared type before making a change; follow existing patterns and keep changes localized.
+- Treat submitted thesis data and evidence-pack JSON as untrusted input. Validate at API boundaries and avoid trusting client-supplied derived market values without checking the existing flow.
+- Keep API keys and other secrets server-only. Do not print `.env.local` contents in command output.
+- Prefer existing dependencies and utilities; do not add a package for a small helper.
+- Avoid changing the legacy `BUILD_SPEC.md` or stale `README.md` unless the task explicitly concerns those documents.
+- Do not claim a command passed unless it was run. The available checks are listed above; run only those relevant to the requested change.
+
+## Known documentation gap
+
+`README.md` and `BUILD_SPEC.md` describe an older static prototype and conflict with the current package, routes, and source tree. This file documents the observed Next.js app. If asked to reconcile project documentation, update the user-facing README and build spec separately rather than assuming the legacy prototype still exists.
