@@ -11,13 +11,14 @@ The actual app lives in this directory. `README.md` currently documents a differ
 ## Setup and commands
 
 - Node.js and npm are required. Dependencies are declared in `package.json`; the lockfile is `package-lock.json`.
+- Use Node.js 22.12 or newer (`engines.node` is enforced by the package metadata).
 - Install: `npm install`
 - Develop: `npm run dev` (Next.js at `http://localhost:3000` by default)
 - Production build: `npm run build`; serve it with `npm start`
 - Type check: `npm run typecheck`
-- `npm run lint` is declared, but verify compatibility with the installed Next.js version before relying on it (`next lint` may not be available in every Next.js 15 setup).
+- Lint: `npm run lint` (currently invokes `next lint`; Next.js 15 warns that this command is deprecated for Next.js 16).
 
-Copy `.env.local.example` to `.env.local` for local configuration. Supported server-side keys include `GOOGLE_GENERATIVE_AI_API_KEY` (or `GEMINI_API_KEY`) for Gemini and `FINNHUB_API_KEY` for live equity quotes. `GEMINI_MODEL` optionally selects the model; the implementation defaults to `gemini-1.5-flash`. `NEXT_PUBLIC_DEMO_MODE` is documented in the example as an optional demo toggle; confirm its current use in source before changing behavior. Never commit `.env.local` or expose server keys through `NEXT_PUBLIC_` variables.
+Copy `.env.local.example` to `.env.local` for local configuration. Supported server-side keys include `GOOGLE_GENERATIVE_AI_API_KEY` (or `GEMINI_API_KEY`) for Gemini and `FINNHUB_API_KEY` for quote data. `GEMINI_MODEL` optionally selects the model; the implementation defaults to `gemini-1.5-flash`. These integrations are optional: the jury falls back to deterministic simulated arguments and evidence uses fallback data when live integrations are unavailable. Never commit `.env.local` or expose server keys through `NEXT_PUBLIC_` variables.
 
 ## Main user flow and routes
 
@@ -41,6 +42,8 @@ Follow the route files for exact request and response shapes; the API handlers a
 - `lib/types/` — shared thesis, evidence, and verdict contracts.
 - `lib/validation/thesis.ts` — input validation; keep API-boundary validation aligned with this schema.
 - `lib/utils/` — formatting, storage, audio, and class-name helpers.
+- `lib/utils/verdictArchive.ts` — versioned JSON export for locally stored verdict history.
+- `public/cas-import-parser.js` — bounded, header-based CSV parser used by NiveshOS statement import.
 
 Import aliases use `@/*` mapped to the repository root. Keep shared contracts in `lib/types` and avoid duplicating them in components or route handlers.
 
@@ -63,6 +66,6 @@ Import aliases use `@/*` mapped to the repository root. Keep shared contracts in
 - Avoid changing the legacy `BUILD_SPEC.md` or stale `README.md` unless the task explicitly concerns those documents.
 - Do not claim a command passed unless it was run. The available checks are listed above; run only those relevant to the requested change.
 
-## Known documentation gap
+## Deployment notes
 
-`README.md` and `BUILD_SPEC.md` describe an older static prototype and conflict with the current package, routes, and source tree. This file documents the observed Next.js app. If asked to reconcile project documentation, update the user-facing README and build spec separately rather than assuming the legacy prototype still exists.
+`README.md` documents local setup and deployment to Vercel. `vercel.json` sets the Mumbai region, and `app/api/jury/route.ts` caps function duration at 60 seconds. Vercel duration maxima depend on the deployment configuration and plan. `BUILD_SPEC.md` is explicitly labeled as the retained legacy NiveshOS prototype contract; do not treat it as instructions for this Next.js application.
