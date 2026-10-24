@@ -1,44 +1,57 @@
-# VerdictPay — Hackathon Edition of The Verdict Chamber
+# VerdictPay — an AI jury for every payment
 
-> **You are on the `hackathon` branch.** This branch holds the hackathon version of the project. The original, untouched Verdict Chamber lives on the [`main` branch](https://github.com/kunalchoubey1108-png/The-Verdict-Chamber/tree/main).
+> **Hackathon branch.** VerdictPay is the entry for **Build What's Next with PayPal and AI**, built on top of The Verdict Chamber. The original project is preserved unchanged on the [`main` branch](https://github.com/kunalchoubey1108-png/The-Verdict-Chamber/tree/main).
 
-## The original project: Verdict Chamber
+VerdictPay puts an adversarial AI jury between you and the checkout button. Describe a purchase, subscription or invoice. Four AI counsel argue it out over computed evidence, a judge rules **PROCEED**, **MODIFY** or **REJECT**, and PayPal then charges only the amount the jury approved, and only after you confirm.
 
-The Verdict Chamber is a pre-trade risk intelligence app. Submit an investment thesis and the app assembles available market evidence, then streams a structured review from a five-role jury: Bull, Bear, Risk, Quant, and Judge. When Gemini is not configured, the jury uses a deterministic simulated response. This is decision-support software for educational purposes, not personalized investment advice.
+AI decision support, not financial advice. Payments run in the PayPal **sandbox**.
 
-## The hackathon version: VerdictPay
+## How it works
 
-Built for the **Build What's Next with PayPal and AI** hackathon. VerdictPay keeps the original's adversarial jury but points it at money decisions instead of stock theses: describe a purchase, subscription or invoice, five AI agents debate it, and the judge rules **PROCEED**, **MODIFY** (pay a changed, lower-or-equal amount) or **REJECT**. PayPal then executes only what the jury and the user approve.
+1. **Describe the payment.** What it is, who gets paid, the amount in USD, how it bills (one-time, monthly, yearly), why, your monthly budget and current subscriptions. Three built-in examples cover each verdict.
+2. **Evidence, not vibes.** The server computes facts from your inputs: amount due now, first-year cost, share of monthly budget, money left afterwards, overlap with existing subscriptions, urgency wording ("limited-time", "ends tonight") and missing reasons. The AI argues over these numbers; it never makes them up.
+3. **Five agents, in order.** Advocate (case for), Skeptic (case against), Budget Officer (affordability and lock-in), Analyst (the numbers), then the Presiding Judge, who sees every prior argument.
+4. **A structured verdict.** The judge returns schema-validated output: outcome, approved amount, required change (for MODIFY), key risks, confidence, risk score and a "reconsider if" condition. Server-side rules enforce the money logic regardless of what the model says: PROCEED pays the requested amount, MODIFY never pays more than requested, REJECT pays nothing.
+5. **You confirm, PayPal pays.** The server signs the approval. You tick an explicit confirmation, the PayPal button appears, and the server creates a PayPal order for exactly the signed amount and captures it after you approve in the PayPal popup. REJECT shows no button.
+6. **Audit trail.** Every review is saved in the browser with the decision, evidence, full debate, verdict and PayPal order and capture IDs. History shows how many payments the jury changed or rejected and how many dollars were requested but not approved.
 
-### What changed for the hackathon
+## How PayPal and AI are used
 
-Keep this list current as work lands on this branch:
+| | What | How |
+| --- | --- | --- |
+| **AI** | Google Gemini (`gemini-3.8-flash` by default) through the Vercel AI SDK (`ai`, `@ai-sdk/google`) | Four counsel stream arguments with `streamText`; the judge returns a typed verdict with `generateObject` and a Zod schema. Prompts tell every agent to cite the computed evidence and to treat user-typed text as untrusted data. |
+| **PayPal** | PayPal REST **Orders v2** API (OAuth client credentials, create order, capture order) and the **PayPal JavaScript SDK** buttons, sandbox environment | The verdict decides whether an order can exist and for how much. `POST /api/paypal/orders` creates an order only from a valid server-signed approval; `POST /api/paypal/orders/[id]/capture` captures it after buyer approval. Both send `PayPal-Request-Id` so retries and double clicks do not create duplicate orders or captures. |
 
-- Branched from `main` at commit `3b308e2` (the original Verdict Chamber).
-- Hardened `.gitignore` for secrets and credentials (private keys, certificates, credential JSON files, `.vercel/`, logs, coverage).
-- Rewrote this README to document both versions.
-- Added an MIT `LICENSE`.
-- Switched the default Gemini model from the retired `gemini-1.5-flash` to `gemini-3.8-flash`.
-- Added PayPal sandbox and verdict-signing placeholders to `.env.local.example`.
-- Replaced the stock-thesis flow with money decisions: a decision form with demo examples, deterministic evidence (budget share, first-year cost, subscription overlap, urgency wording), new juror roles (Advocate, Skeptic, Budget Officer, Analyst, Judge) and PROCEED / MODIFY / REJECT verdicts.
-- The judge now returns structured output (schema-validated) instead of JSON scraped from text, and server-side money rules cap the approved amount at the requested amount.
-- The jury always delivers a verdict: if Gemini is missing or a call fails, a deterministic simulation stands in.
-- Removed the stock-only code (quotes, market signals, Finnhub) and the legacy NiveshOS prototype. Both remain on `main`.
-- PayPal Sandbox checkout gated by the verdict: the server signs each approval (HMAC, 30-minute expiry), creates a PayPal Orders v2 order only from a valid signature and for exactly the approved amount, and captures it after the buyer approves. The user must confirm before checkout opens. REJECT verdicts show no payment button.
-- Receipts (PayPal order and capture IDs, or a clearly labelled simulated payment when PayPal is not configured) are saved with the verdict and shown in history.
+### Why the payment is safe to automate
 
-To see every change relative to the original:
+- Verdicts live in the browser, so the server **signs** each approval (HMAC-SHA256, 30-minute expiry) with the decision id, approved amount, outcome, title and payee. A client cannot raise the amount, change the description, or pay for a rejected decision.
+- The PayPal client secret never reaches the browser; only the client ID (public by design) does.
+- The user must tick a confirmation stating the exact amount and payee before checkout opens.
+- If Gemini is missing or a call fails, a deterministic demo jury stands in and the UI says so ("Demo jury" banner, `DEMO JUROR` chips), so a demo never silently pretends to be live AI.
 
-```sh
-git diff main...hackathon
+## Architecture
+
+```
+Browser (Next.js client)                 Server (Next.js route handlers)                  External
+─────────────────────────                ───────────────────────────────                  ────────
+/verdict/new   DecisionForm
+               └─ saves decision (localStorage)
+/verdict/[id]  JuryRoom ── POST /api/jury ──► validate (Zod) → buildEvidence()
+                                              runJury: Advocate → Skeptic → Budget → Analyst ─► Gemini (streamText)
+                                                       Judge ──────────────────────────────────► Gemini (generateObject)
+                                              normalizeVerdict()  (money rules)
+               ◄── SSE: arguments, verdict + signApproval() token
+               PaymentPanel: user confirms
+               PayPal JS SDK Buttons
+                 createOrder ─► POST /api/paypal/orders ──► verifyApproval() → Orders v2 create ─► PayPal sandbox
+                 onApprove   ─► POST /api/paypal/orders/[id]/capture ─► Orders v2 capture ──────► PayPal sandbox
+               receipt saved with verdict (localStorage)
+/verdict/history  audit trail + impact summary
 ```
 
-## Requirements
+## Run it locally
 
-- Node.js 22.12 or newer
-- npm
-
-## Install, configure, and run
+Requirements: Node.js 22.12 or newer and npm.
 
 ```sh
 git clone https://github.com/kunalchoubey1108-png/The-Verdict-Chamber.git
@@ -46,86 +59,96 @@ cd The-Verdict-Chamber
 git switch hackathon
 npm ci
 cp .env.local.example .env.local
-# Add API keys to .env.local if live integrations are wanted.
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Without API keys, the app still runs with its simulated jury and fallback evidence.
+Open [http://localhost:3000](http://localhost:3000) and click **Start a review**, then one of the **Try an example** buttons.
 
-### Checks and production run
+With no keys at all the full flow still runs: the demo jury argues and rules, and the payment step records a clearly labelled simulated payment. Add the keys below for live AI and real sandbox payments.
+
+### Environment variables
+
+| Variable | Needed for | Purpose |
+| --- | --- | --- |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Live AI | Gemini API key ([get one](https://aistudio.google.com/app/apikey)). `GEMINI_API_KEY` is accepted as an alias. |
+| `GEMINI_MODEL` | Optional | Model override; defaults to `gemini-3.8-flash`. |
+| `PAYPAL_CLIENT_ID` | Real payments | PayPal **sandbox** REST app client ID ([create an app](https://developer.paypal.com/dashboard/applications/sandbox)). Sent to the browser for the PayPal button. |
+| `PAYPAL_CLIENT_SECRET` | Real payments | PayPal sandbox REST app secret. Server-side only. |
+| `VERDICT_SIGNING_SECRET` | Real payments | Random string of at least 32 characters, e.g. `openssl rand -hex 32`. Signs jury approvals; without it, payments are disabled when PayPal is configured. |
+
+Never commit `.env.local` (it is in `.gitignore`). Only use sandbox credentials.
+
+### Make a real sandbox payment
+
+1. Create a sandbox REST app in the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/applications/sandbox) and put its client ID and secret in `.env.local`.
+2. Set `VERDICT_SIGNING_SECRET` and restart `npm run dev`.
+3. In the dashboard under **Sandbox → Accounts**, note the generated *Personal* (buyer) account.
+4. Run the **Annual design app** example (the jury modifies it to monthly billing), tick the confirmation, click the PayPal button and log in with the sandbox buyer account.
+5. The receipt shows the PayPal order and capture IDs, and the payment appears in the sandbox merchant account.
+
+### Checks
 
 ```sh
 npm run lint
 npm run typecheck
 npm test
 npm run build
-npm start
 ```
 
-`npm start` serves the most recent production build.
+## Demo walkthrough
 
-## Environment variables
+The outcomes below are what the built-in demo jury returns; a live Gemini jury reads the same evidence but may rule differently.
 
-Set these in `.env.local` (local) or in your hosting provider's environment settings. All are optional; the app falls back to simulated/fallback data when they are missing.
+1. **Annual design app** ($1,188/year, overlaps an existing tool, 79% of the budget) → **MODIFY**: start monthly at $99. Confirm and pay $99 with PayPal.
+2. **Flash-sale course** ($400, "limited-time", overlaps a course platform) → **REJECT**: no PayPal button, $400 not spent.
+3. **Ergonomic keyboard** ($129, fits the budget, no overlap) → **PROCEED**: pay $129.
+4. Open **History** to see the audit trail, PayPal IDs and the impact summary.
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | No | Gemini API key for model-generated jury arguments. `GEMINI_API_KEY` is an accepted alias. Get one at https://aistudio.google.com/app/apikey. |
-| `GEMINI_MODEL` | No | Gemini model override; defaults to `gemini-3.8-flash`. |
-| `PAYPAL_CLIENT_ID` | For payments | PayPal **sandbox** REST app client ID. Create one at https://developer.paypal.com/dashboard/applications/sandbox. |
-| `PAYPAL_CLIENT_SECRET` | For payments | PayPal **sandbox** REST app secret. Server-side only. |
-| `VERDICT_SIGNING_SECRET` | For payments | Random string (`openssl rand -hex 32`) used to sign jury verdicts so a payment can only be created for an approved amount. |
+The full judge-facing script is in [`docs/demo-script.md`](docs/demo-script.md).
 
-Without `PAYPAL_CLIENT_ID` the payment step runs in **demo mode** and records a simulated payment (clearly labelled; no order is created). With PayPal credentials set, `VERDICT_SIGNING_SECRET` is also required, otherwise payments are disabled. `PAYPAL_CLIENT_ID` is passed to the browser for the PayPal button (it is public by design); the secret never leaves the server.
+## Routes
 
-### Testing a real sandbox payment
-
-1. In the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/applications/sandbox), create a sandbox REST app and copy its client ID and secret into `.env.local`.
-2. Set `VERDICT_SIGNING_SECRET` (for example `openssl rand -hex 32`) and restart `npm run dev`.
-3. Under **Sandbox → Accounts**, use the generated *Personal* (buyer) account to log in to the PayPal popup.
-4. Run a review that ends in PROCEED or MODIFY, tick the confirmation, and pay. The receipt shows the PayPal order and capture IDs; the payment also appears in the sandbox merchant account.
-
-Keep keys server-side; never expose them as `NEXT_PUBLIC_` variables. Never commit `.env.local` (it is ignored by `.gitignore`). If a credential is exposed, revoke it with its provider and replace it in local and deployment settings.
-
-## Deploy to Vercel
-
-1. Import this repository into Vercel and select the `hackathon` branch as the production branch for the hackathon deployment (or use a preview deployment of that branch).
-2. Use the Next.js framework preset and Node.js 22.12 or newer.
-3. Add the environment variables above in the Vercel project settings.
-4. Deploy. `vercel.json` selects the Mumbai (`bom1`) region.
-
-The jury route has a conservative 60-second function duration cap. If longer Gemini responses are needed, adjust `maxDuration` in `app/api/jury/route.ts` to a value supported by the project's Vercel runtime and plan.
-
-## Main routes
-
-- `/` — product entry point
-- `/verdict/new` — describe a payment (or load a demo example)
-- `/verdict/[id]` — watch the jury deliberate and see the verdict
-- `/verdict/history` — review saved verdicts
-- `POST /api/jury` — validate a decision, recompute evidence server-side, and stream jury events as server-sent events; the verdict event carries a signed approval token
-- `POST /api/paypal/orders` — create a PayPal sandbox order from a valid approval token
-- `POST /api/paypal/orders/[id]/capture` — capture a buyer-approved order
-
-Decision history is stored in the current browser only. Use **Download Report Archive** on the history page to save a versioned JSON copy; it contains the decisions and jury arguments and should be handled like private financial information.
+- `/` — landing page
+- `/verdict/new` — describe a payment (or load an example)
+- `/verdict/[id]` — live deliberation, verdict and payment
+- `/verdict/history` and `/verdict/history/[id]` — saved reviews, receipts and impact summary
+- `POST /api/jury` — validates a decision, recomputes evidence, streams jury events (SSE); the verdict event carries the signed approval
+- `POST /api/paypal/orders` — creates a sandbox order from a valid approval
+- `POST /api/paypal/orders/[id]/capture` — captures a buyer-approved order
 
 ## Project structure
 
-- `app/` — Next.js App Router pages, layouts, and the jury API route
-- `components/verdict/` — decision form, evidence panel, jury room, verdict card
-- `lib/decision/` — deterministic evidence computed from the decision
-- `lib/agents/` — jury prompts, orchestration, and verdict rules (schema, money caps, offline fallback)
-- `lib/payments/` — approval signing and the PayPal Orders v2 client (sandbox only)
-- `lib/types/` and `lib/validation/` — shared contracts and input validation
+- `app/` — pages and API route handlers
+- `components/verdict/` — decision form, evidence panel, jury room, juror cards, verdict card, payment panel
+- `lib/decision/` — deterministic evidence
+- `lib/agents/` — prompts, sequential orchestration, verdict schema, money rules, demo jury
+- `lib/payments/` — approval signing and the PayPal Orders v2 client
+- `lib/validation/`, `lib/types/` — shared schemas and contracts
+- `docs/` — Devpost write-up, demo-video script, pitch outline
 
-## Accessing the original version
+## Known limitations
 
-The original Verdict Chamber is preserved unchanged on `main`:
+- **Sandbox only.** The PayPal host is hard-wired to the sandbox; there is no live-payment mode.
+- **One-time charges.** MODIFY to "monthly billing" charges the first month as a one-time order; PayPal Subscriptions, refunds and webhooks are not implemented.
+- **Browser storage.** Decisions, verdicts and receipts live in the browser's localStorage; there are no accounts or server database. Use **Download Report Archive** on the history page to keep a copy.
+- **Evidence comes only from your inputs.** VerdictPay does not look up prices, merchants or your PayPal transaction history.
+- **Approval window.** A signed approval expires after 30 minutes; after that, start a new review to pay.
+- **Function time.** The jury route is capped at 60 seconds (`maxDuration`); five sequential model calls on a slow model may need a higher limit on your hosting plan.
 
-- Browse: https://github.com/kunalchoubey1108-png/The-Verdict-Chamber/tree/main
-- Locally:
+## Roadmap (not built)
 
-```sh
-git switch main
-```
+- PayPal Subscriptions for approved recurring plans, and refunds for reversed decisions
+- Webhooks to reconcile payment status server-side
+- Pulling real context from PayPal transaction history to spot recurring spend
+- Letting AI shopping agents call VerdictPay as a guardrail before they spend
 
-Switch back to the hackathon version with `git switch hackathon`.
+## The original project
+
+The Verdict Chamber, on `main`, is a pre-trade stock research app: submit an investment thesis and a five-role jury (Bull, Bear, Risk, Quant, Judge) reviews it against market evidence. VerdictPay keeps its core idea, a structured adversarial AI review, and points it at everyday payments with PayPal executing the outcome.
+
+- Browse the original: https://github.com/kunalchoubey1108-png/The-Verdict-Chamber/tree/main
+- See every hackathon change: `git diff main...hackathon`
+
+## License
+
+[MIT](LICENSE)
