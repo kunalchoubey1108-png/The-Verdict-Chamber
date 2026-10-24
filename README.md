@@ -24,7 +24,8 @@ Keep this list current as work lands on this branch:
 - The judge now returns structured output (schema-validated) instead of JSON scraped from text, and server-side money rules cap the approved amount at the requested amount.
 - The jury always delivers a verdict: if Gemini is missing or a call fails, a deterministic simulation stands in.
 - Removed the stock-only code (quotes, market signals, Finnhub) and the legacy NiveshOS prototype. Both remain on `main`.
-- _Upcoming: PayPal Sandbox checkout gated by the verdict (phase 2)._
+- PayPal Sandbox checkout gated by the verdict: the server signs each approval (HMAC, 30-minute expiry), creates a PayPal Orders v2 order only from a valid signature and for exactly the approved amount, and captures it after the buyer approves. The user must confirm before checkout opens. REJECT verdicts show no payment button.
+- Receipts (PayPal order and capture IDs, or a clearly labelled simulated payment when PayPal is not configured) are saved with the verdict and shown in history.
 
 To see every change relative to the original:
 
@@ -75,7 +76,14 @@ Set these in `.env.local` (local) or in your hosting provider's environment sett
 | `PAYPAL_CLIENT_SECRET` | For payments | PayPal **sandbox** REST app secret. Server-side only. |
 | `VERDICT_SIGNING_SECRET` | For payments | Random string (`openssl rand -hex 32`) used to sign jury verdicts so a payment can only be created for an approved amount. |
 
-The PayPal and signing variables are placeholders for the upcoming PayPal integration and are not read by the app yet.
+Without `PAYPAL_CLIENT_ID` the payment step runs in **demo mode** and records a simulated payment (clearly labelled; no order is created). With PayPal credentials set, `VERDICT_SIGNING_SECRET` is also required, otherwise payments are disabled. `PAYPAL_CLIENT_ID` is passed to the browser for the PayPal button (it is public by design); the secret never leaves the server.
+
+### Testing a real sandbox payment
+
+1. In the [PayPal Developer Dashboard](https://developer.paypal.com/dashboard/applications/sandbox), create a sandbox REST app and copy its client ID and secret into `.env.local`.
+2. Set `VERDICT_SIGNING_SECRET` (for example `openssl rand -hex 32`) and restart `npm run dev`.
+3. Under **Sandbox → Accounts**, use the generated *Personal* (buyer) account to log in to the PayPal popup.
+4. Run a review that ends in PROCEED or MODIFY, tick the confirmation, and pay. The receipt shows the PayPal order and capture IDs; the payment also appears in the sandbox merchant account.
 
 Keep keys server-side; never expose them as `NEXT_PUBLIC_` variables. Never commit `.env.local` (it is ignored by `.gitignore`). If a credential is exposed, revoke it with its provider and replace it in local and deployment settings.
 
@@ -94,7 +102,9 @@ The jury route has a conservative 60-second function duration cap. If longer Gem
 - `/verdict/new` — describe a payment (or load a demo example)
 - `/verdict/[id]` — watch the jury deliberate and see the verdict
 - `/verdict/history` — review saved verdicts
-- `POST /api/jury` — validate a decision, recompute evidence server-side, and stream jury events as server-sent events
+- `POST /api/jury` — validate a decision, recompute evidence server-side, and stream jury events as server-sent events; the verdict event carries a signed approval token
+- `POST /api/paypal/orders` — create a PayPal sandbox order from a valid approval token
+- `POST /api/paypal/orders/[id]/capture` — capture a buyer-approved order
 
 Decision history is stored in the current browser only. Use **Download Report Archive** on the history page to save a versioned JSON copy; it contains the decisions and jury arguments and should be handled like private financial information.
 
@@ -104,6 +114,7 @@ Decision history is stored in the current browser only. Use **Download Report Ar
 - `components/verdict/` — decision form, evidence panel, jury room, verdict card
 - `lib/decision/` — deterministic evidence computed from the decision
 - `lib/agents/` — jury prompts, orchestration, and verdict rules (schema, money caps, offline fallback)
+- `lib/payments/` — approval signing and the PayPal Orders v2 client (sandbox only)
 - `lib/types/` and `lib/validation/` — shared contracts and input validation
 
 ## Accessing the original version
