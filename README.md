@@ -21,6 +21,9 @@ Keep this list current as work lands on this branch:
 - Branched from `main` at commit `3b308e2` (the original Verdict Chamber).
 - Hardened `.gitignore` for secrets and credentials (private keys, certificates, credential JSON files, `.vercel/`, logs, coverage).
 - Rewrote this README to document both versions.
+- Added an MIT `LICENSE`.
+- Switched the default Gemini model from the retired `gemini-1.5-flash` to `gemini-3.8-flash`.
+- Added PayPal sandbox and verdict-signing placeholders to `.env.local.example`.
 - _TODO — add VerdictPay features, changed routes, new integrations, and new environment variables here._
 
 To see every change relative to the original:
@@ -68,7 +71,12 @@ Set these in `.env.local` (local) or in your hosting provider's environment sett
 | --- | --- | --- |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | No | Gemini API key for model-generated jury arguments. `GEMINI_API_KEY` is an accepted alias. Get one at https://aistudio.google.com/app/apikey. |
 | `FINNHUB_API_KEY` | No | Finnhub quote integration; fallback evidence is used when unavailable. Get one at https://finnhub.io/register. |
-| `GEMINI_MODEL` | No | Gemini model override; defaults to `gemini-1.5-flash`. |
+| `GEMINI_MODEL` | No | Gemini model override; defaults to `gemini-3.8-flash`. |
+| `PAYPAL_CLIENT_ID` | For payments | PayPal **sandbox** REST app client ID. Create one at https://developer.paypal.com/dashboard/applications/sandbox. |
+| `PAYPAL_CLIENT_SECRET` | For payments | PayPal **sandbox** REST app secret. Server-side only. |
+| `VERDICT_SIGNING_SECRET` | For payments | Random string (`openssl rand -hex 32`) used to sign jury verdicts so a payment can only be created for an approved amount. |
+
+The PayPal and signing variables are placeholders for the upcoming PayPal integration and are not read by the app yet.
 
 Keep keys server-side; never expose them as `NEXT_PUBLIC_` variables. Never commit `.env.local` (it is ignored by `.gitignore`). If a credential is exposed, revoke it with its provider and replace it in local and deployment settings.
 
