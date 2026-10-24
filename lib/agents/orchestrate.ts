@@ -18,7 +18,7 @@ import {
   formatEvidencePack,
 } from "./prompts";
 
-const MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.8-flash";
 const API_KEY =
   process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
   process.env.GEMINI_API_KEY ||
