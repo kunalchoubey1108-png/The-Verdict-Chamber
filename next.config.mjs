@@ -13,6 +13,9 @@ const nextConfig = {
   // AI SDK streaming requires these packages to run server-side only
   serverExternalPackages: ["@ai-sdk/google"],
 
+  // The PayPal JS SDK needs the client ID in the browser (it is public by design);
+  // PAYPAL_CLIENT_SECRET is never exposed.
+  env: { NEXT_PUBLIC_PAYPAL_CLIENT_ID: process.env.PAYPAL_CLIENT_ID ?? "" },
 };
 
 export default nextConfig;

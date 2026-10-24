@@ -31,6 +31,13 @@ const persistedVerdictSchema = z.object({
     summary: z.string().max(2_000),
     keyRisks: z.array(z.string().max(300)).max(5),
   }),
+  payment: z.object({
+    status: z.string().max(40),
+    amount: z.number().finite().min(0),
+    orderId: z.string().max(64).nullable(),
+    captureId: z.string().max(64).nullable(),
+    at: z.string().datetime(),
+  }).optional(),
 });
 
 function safeGet<T>(key: string): T | null {

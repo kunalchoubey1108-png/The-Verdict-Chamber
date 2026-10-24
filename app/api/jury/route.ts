@@ -7,6 +7,7 @@ import { NextRequest } from "next/server";
 import type { JuryEvent } from "@/lib/types/verdict";
 import { runJury } from "@/lib/agents/orchestrate";
 import { buildEvidence } from "@/lib/decision/evidence";
+import { signApproval } from "@/lib/payments/approval";
 import { juryRequestSchema } from "@/lib/validation/decision";
 import { readJsonBody } from "@/lib/utils/readJsonBody";
 
@@ -36,6 +37,9 @@ export async function POST(req: NextRequest) {
       async start(controller) {
         function send(event: JuryEvent) {
           if (abortController.signal.aborted) return;
+          if (event.type === "verdict" && event.verdict) {
+            event = { ...event, approvalToken: signApproval(decision, event.verdict) };
+          }
           const data = `data: ${JSON.stringify(event)}\n\n`;
           try {
             controller.enqueue(encoder.encode(data));

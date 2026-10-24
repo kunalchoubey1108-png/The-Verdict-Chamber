@@ -59,6 +59,19 @@ export interface VerdictCard {
   keyRisks: string[];
 }
 
+// ── Payment outcome ───────────────────────────────────────────────────────────
+
+export interface PaymentRecord {
+  /** PayPal capture status (e.g. COMPLETED), or SIMULATED in demo mode */
+  status: string;
+  /** USD actually charged */
+  amount: number;
+  orderId: string | null;
+  captureId: string | null;
+  /** ISO timestamp */
+  at: string;
+}
+
 // ── Full verdict (stored in localStorage) ─────────────────────────────────────
 
 export interface FullVerdict {
@@ -68,6 +81,8 @@ export interface FullVerdict {
   decision: MoneyDecision;
   deliberation: AgentMessage[];
   verdict: VerdictCard;
+  /** Present once the user paid (or simulated paying) the approved amount */
+  payment?: PaymentRecord;
 }
 
 // ── SSE stream event types ────────────────────────────────────────────────────
@@ -84,5 +99,7 @@ export interface JuryEvent {
   agent?: AgentId;
   chunk?: string;
   verdict?: VerdictCard;
+  /** Server-signed approval sent with the verdict; null when payments are off or REJECT */
+  approvalToken?: string | null;
   error?: string;
 }
