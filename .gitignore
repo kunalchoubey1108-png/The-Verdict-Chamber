@@ -1,5 +1,9 @@
 .claude/
 
+# local agent skill installs — never committed
+.agents/
+skills-lock.json
+
 # pitch deck & PPT — local only, never committed
 pitch/
 tools/capture-shots.py
