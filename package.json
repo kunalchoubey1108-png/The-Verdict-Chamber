@@ -1,8 +1,8 @@
 {
-  "name": "verdict-chamber",
+  "name": "verdictpay",
   "version": "2.0.0",
   "private": true,
-  "description": "The Verdict Chamber — pre-trade risk intelligence platform. Built on NiveshOS.",
+  "description": "VerdictPay — an adversarial AI jury that reviews a payment before PayPal executes it. Built from The Verdict Chamber.",
   "engines": {
     "node": ">=22.12.0"
   },
