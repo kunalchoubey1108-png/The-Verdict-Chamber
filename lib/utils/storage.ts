@@ -1,22 +1,20 @@
-// ── localStorage persistence for Verdict Chamber ─────────────────────────────
-// All storage is namespaced under "vc." to avoid collisions with NiveshOS
-// which uses "niveshos.*" keys.
+// ── localStorage persistence for VerdictPay ──────────────────────────────────
+// Namespaced under "vp." so records from the original stock app ("vc.*")
+// are never misread as payment decisions.
 
-import type { PortfolioHolding, TradeThesis } from "@/lib/types/thesis";
 import type { FullVerdict } from "@/lib/types/verdict";
 import { z } from "zod";
-import { evidencePackSchema, serverThesisSchema } from "@/lib/validation/api";
+import { decisionSchema, type MoneyDecision } from "@/lib/validation/decision";
 
-const PREFIX = "vc.";
+const PREFIX = "vp.";
 const HISTORY_KEY = PREFIX + "history"; // string[] of verdict IDs, newest first
-const THESIS_PREFIX = PREFIX + "thesis.";
+const DECISION_PREFIX = PREFIX + "decision.";
 const VERDICT_PREFIX = PREFIX + "verdict.";
-const PORTFOLIO_HANDOFF_KEY = PREFIX + "portfolio-handoff";
 
 const persistedVerdictSchema = z.object({
   id: z.string().min(1).max(64),
-  thesisId: z.string().min(1).max(64),
   createdAt: z.string().datetime(),
+  decision: decisionSchema,
   deliberation: z.array(z.object({
     agent: z.enum(["bull", "bear", "risk", "quant", "judge"]),
     content: z.string().max(100_000),
@@ -24,64 +22,16 @@ const persistedVerdictSchema = z.object({
     status: z.enum(["thinking", "streaming", "done"]),
   })).max(5),
   verdict: z.object({
-    outcome: z.enum(["TRADE", "WATCH", "AVOID"]),
+    outcome: z.enum(["PROCEED", "MODIFY", "REJECT"]),
     confidence: z.number().finite().min(0).max(100),
     riskScore: z.number().finite().min(0).max(100),
-    trapProbability: z.number().finite().min(0).max(100),
-    thesisKiller: z.string().max(5_000),
-    riskRewardRatio: z.number().finite().min(0).max(1_000),
-    summary: z.string().max(10_000),
-    watchConditions: z.array(z.string().max(2_000)).max(50).optional(),
-    keyRisks: z.array(z.string().max(2_000)).max(50),
-  }),
-  evidencePack: evidencePackSchema.optional(),
-  thesisSnapshot: z.object({
-    instrument: z.string().min(1).max(120),
-    direction: z.string().min(1).max(16),
-    entryPrice: z.number().finite().min(0),
-    target: z.number().finite().min(0),
-    stopLoss: z.number().finite().min(0),
+    approvedAmount: z.number().finite().min(0),
+    modification: z.string().max(500),
+    dealBreaker: z.string().max(500),
+    summary: z.string().max(2_000),
+    keyRisks: z.array(z.string().max(300)).max(5),
   }),
 });
-
-export interface PortfolioHandoff {
-  symbol: string;
-  positionSize: number;
-  portfolioSnapshot: PortfolioHolding[];
-}
-
-/** Read and clear the one-time handoff created by NiveshOS. */
-export function consumePortfolioHandoff(): PortfolioHandoff | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(PORTFOLIO_HANDOFF_KEY);
-    localStorage.removeItem(PORTFOLIO_HANDOFF_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<PortfolioHandoff>;
-    if (
-      typeof parsed.symbol !== "string" ||
-      typeof parsed.positionSize !== "number" ||
-      !Number.isFinite(parsed.positionSize) ||
-      parsed.positionSize < 500 ||
-      parsed.positionSize > 100_000_000 ||
-      !Array.isArray(parsed.portfolioSnapshot)
-    ) return null;
-
-    const portfolioSnapshot = parsed.portfolioSnapshot.filter((holding): holding is PortfolioHolding =>
-      !!holding &&
-      typeof holding.symbol === "string" &&
-      typeof holding.name === "string" &&
-      typeof holding.qty === "number" && Number.isFinite(holding.qty) && holding.qty >= 0 &&
-      typeof holding.ltp === "number" && Number.isFinite(holding.ltp) && holding.ltp >= 0 &&
-      typeof holding.avgPrice === "number" && Number.isFinite(holding.avgPrice) && holding.avgPrice >= 0 &&
-      ["equity", "mf", "etf", "bond", "reit", "invit", "cash"].includes(holding.assetClass)
-    ).slice(0, 200);
-
-    return { symbol: parsed.symbol, positionSize: parsed.positionSize, portfolioSnapshot };
-  } catch {
-    return null;
-  }
-}
 
 function safeGet<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -112,15 +62,15 @@ function safeRemove(key: string): void {
   }
 }
 
-// ── Theses ───────────────────────────────────────────────────────────────────
+// ── Decisions ────────────────────────────────────────────────────────────────
 
-export function saveThesis(thesis: TradeThesis): boolean {
-  return safeSet(THESIS_PREFIX + thesis.id, thesis);
+export function saveDecision(decision: MoneyDecision): boolean {
+  return safeSet(DECISION_PREFIX + decision.id, decision);
 }
 
-export function loadThesis(id: string): TradeThesis | null {
-  const parsed = serverThesisSchema.safeParse(safeGet<unknown>(THESIS_PREFIX + id));
-  return parsed.success && parsed.data.id === id ? parsed.data as TradeThesis : null;
+export function loadDecision(id: string): MoneyDecision | null {
+  const parsed = decisionSchema.safeParse(safeGet<unknown>(DECISION_PREFIX + id));
+  return parsed.success && parsed.data.id === id ? parsed.data : null;
 }
 
 // ── Verdicts ─────────────────────────────────────────────────────────────────
@@ -136,7 +86,7 @@ export function saveVerdict(verdict: FullVerdict): boolean {
 
 export function loadVerdict(id: string): FullVerdict | null {
   const parsed = persistedVerdictSchema.safeParse(safeGet<unknown>(VERDICT_PREFIX + id));
-  return parsed.success && parsed.data.id === id ? parsed.data as FullVerdict : null;
+  return parsed.success && parsed.data.id === id ? parsed.data : null;
 }
 
 export function loadVerdictHistory(): FullVerdict[] {
@@ -156,10 +106,4 @@ export function deleteVerdict(id: string): void {
   safeRemove(VERDICT_PREFIX + id);
   const history = loadHistoryIds();
   safeSet(HISTORY_KEY, history.filter((i) => i !== id));
-}
-
-export function clearAllVerdicts(): void {
-  const ids = loadHistoryIds();
-  ids.forEach((id) => safeRemove(VERDICT_PREFIX + id));
-  safeRemove(HISTORY_KEY);
 }

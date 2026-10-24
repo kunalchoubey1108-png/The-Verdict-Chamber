@@ -1,12 +1,10 @@
 import "./globals.css";
 import "./styles.css";
-import { SidebarToggle } from "@/components/SidebarToggle";
-import Script from "next/script";
 
 export const metadata = {
-  title: "The Verdict Chamber — Pre-Trade Risk Intelligence",
+  title: "VerdictPay — An AI jury for every payment",
   description:
-    "Submit a trade thesis. The multi-agent AI jury breaks it apart before capital is at risk.",
+    "Five AI agents debate a purchase, subscription or invoice before you pay. PayPal executes only what the jury and you approve.",
 };
 
 export const viewport = {
@@ -22,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script src="/cas-import-parser.js" strategy="beforeInteractive" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -34,10 +31,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
-        <SidebarToggle />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

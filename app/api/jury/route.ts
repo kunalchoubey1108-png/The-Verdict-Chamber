@@ -1,14 +1,13 @@
 // ── POST /api/jury ────────────────────────────────────────────────────────────
-// Accepts a validated thesis, rebuilds trusted evidence, and streams deliberation
-// as Server-Sent Events (SSE). One event per agent_start / agent_chunk /
-// agent_done / verdict. Client reads via ReadableStream.
+// Accepts a validated money decision, recomputes evidence server-side, and
+// streams deliberation as Server-Sent Events (SSE). One event per agent_start /
+// agent_chunk / agent_done / verdict. Client reads via ReadableStream.
 
 import { NextRequest } from "next/server";
-import type { TradeThesis } from "@/lib/types/thesis";
 import type { JuryEvent } from "@/lib/types/verdict";
 import { runJury } from "@/lib/agents/orchestrate";
-import { assembleEvidence } from "@/lib/signals/assembleEvidence";
-import { juryRequestSchema } from "@/lib/validation/api";
+import { buildEvidence } from "@/lib/decision/evidence";
+import { juryRequestSchema } from "@/lib/validation/decision";
 import { readJsonBody } from "@/lib/utils/readJsonBody";
 
 // Bound jury streams; raise only when the deployment plan and UX require it.
@@ -24,12 +23,10 @@ export async function POST(req: NextRequest) {
 
     const parsed = juryRequestSchema.safeParse(body.value);
     if (!parsed.success) {
-      return new Response(JSON.stringify({ error: "Invalid thesis." }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return Response.json({ error: "Invalid decision. Check the amount, budget and fields." }, { status: 400 });
     }
-    const evidencePack = await assembleEvidence(parsed.data.thesis as TradeThesis);
+    const { decision } = parsed.data;
+    const evidence = buildEvidence(decision);
 
     // ── Set up SSE stream ─────────────────────────────────────────────────
     const encoder = new TextEncoder();
@@ -56,7 +53,7 @@ export async function POST(req: NextRequest) {
         }
 
         try {
-          await runJury(evidencePack, send, abortController.signal);
+          await runJury(decision, evidence, send, abortController.signal);
           sendDone();
         } catch (err) {
           if (!abortController.signal.aborted) {

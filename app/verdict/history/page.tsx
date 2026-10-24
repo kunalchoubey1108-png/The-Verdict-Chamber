@@ -6,7 +6,7 @@ import type { FullVerdict } from "@/lib/types/verdict";
 import { AGENTS } from "@/lib/types/verdict";
 import { loadVerdictHistory, deleteVerdict } from "@/lib/utils/storage";
 import { createVerdictArchive } from "@/lib/utils/verdictArchive";
-import { fmtDateTime, fmtINR } from "@/lib/utils/format";
+import { fmtDateTime, fmtUSD } from "@/lib/utils/format";
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<FullVerdict[]>([]);
@@ -30,7 +30,7 @@ export default function HistoryPage() {
       const blobUrl = URL.createObjectURL(new Blob([archive], { type: "application/json" }));
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = `verdict-chamber-archive-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `verdictpay-archive-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(blobUrl), 0);
     } catch {
@@ -39,22 +39,22 @@ export default function HistoryPage() {
   }
 
   const badgeClass = (outcome: string) =>
-    outcome === "TRADE"
+    outcome === "PROCEED"
       ? "bg-cb-green text-white border-2 border-black"
-      : outcome === "WATCH"
+      : outcome === "MODIFY"
       ? "bg-cb-orange text-black border-2 border-black"
       : "bg-cb-red text-white border-2 border-black";
 
   const outcomeIcon = (outcome: string) =>
-    outcome === "TRADE" ? "▲" : outcome === "WATCH" ? "◆" : "▼";
+    outcome === "PROCEED" ? "▲" : outcome === "MODIFY" ? "◆" : "▼";
 
   return (
     <main className="min-h-screen route-enter bg-raw-bg text-bone grid-bg selection:bg-cb-orange selection:text-black">
       {/* Top Ticker Bar */}
       <div className="border-b border-graphite bg-black px-6 py-2 flex items-center justify-between font-mono text-[10px] text-fog uppercase">
         <div className="flex items-center gap-4">
-          <span className="text-cb-orange font-bold">● HISTORICAL AUDIT LEDGER</span>
-          <span>PERSISTENCE: LOCAL STORAGE ENCLAVE</span>
+          <span className="text-cb-orange font-bold">● DECISION AUDIT TRAIL</span>
+          <span>STORED IN THIS BROWSER ONLY</span>
         </div>
         <div>RECORD COUNT: {history.length}</div>
       </div>
@@ -64,15 +64,15 @@ export default function HistoryPage() {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-cb-orange text-black font-tech font-bold text-sm flex items-center justify-center border-2 border-black rounded-sm shadow-brutal">
-              VC
+              VP
             </div>
             <span className="font-display text-2xl tracking-wide text-paper-white">
-              THE VERDICT CHAMBER
+              VERDICTPAY
             </span>
           </Link>
           <span className="text-graphite">/</span>
           <span className="decal-dark text-[9px]">
-            ARBITRATION ARCHIVE
+            HISTORY
           </span>
         </div>
         <div className="flex items-center gap-6 text-xs font-tech tracking-wider uppercase">
@@ -80,7 +80,7 @@ export default function HistoryPage() {
             href="/verdict/new"
             className="neo-btn-primary text-xs px-5 py-2.5"
           >
-            [+] NEW INQUIRY
+            [+] NEW REVIEW
           </Link>
         </div>
       </nav>
@@ -88,16 +88,16 @@ export default function HistoryPage() {
       <div className="max-w-[1280px] mx-auto px-6 py-12">
         <header className="mb-10 pb-6 border-b-2 border-graphite">
           <div className="flex items-center gap-2 mb-2">
-            <span className="decal-orange">CHRONOLOGICAL DOCKET</span>
-            <span className="font-mono text-xs text-fog uppercase">IMMUTABLE PRE-TRADE AUDIT TRAIL</span>
+            <span className="decal-orange">AUDIT TRAIL</span>
+            <span className="font-mono text-xs text-fog uppercase">EVERY VERDICT, NEWEST FIRST</span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <h1 className="font-display text-5xl sm:text-7xl text-paper-white uppercase tracking-wide">
-                DELIBERATION JOURNAL
+                DECISION HISTORY
               </h1>
               <p className="font-sans text-fog text-sm sm:text-base max-w-xl leading-relaxed pt-1">
-                Locally saved verdicts, jury debates, risk scores, and thesis-killer conditions.
+                Every payment the jury reviewed: the request, the verdict, the approved amount and the full debate.
               </p>
             </div>
             <button
@@ -118,18 +118,18 @@ export default function HistoryPage() {
 
         {!loaded ? (
           <div className="text-center py-28 text-fog font-tech text-base tracking-widest uppercase">
-            ACCESSING ENCRYPTED LEDGER…
+            LOADING HISTORY…
           </div>
         ) : history.length === 0 ? (
           <div className="neo-card text-center py-20 space-y-4 max-w-lg mx-auto bg-raw-surface">
             <div className="text-4xl">📋</div>
-            <h2 className="font-display text-3xl text-paper-white">NO DOCKETS RECORDED</h2>
+            <h2 className="font-display text-3xl text-paper-white">NO REVIEWS YET</h2>
             <p className="text-sm font-sans text-fog leading-relaxed">
-              No previous pre-trade deliberations found in this profile. Convene your first AI jury.
+              No payment reviews found in this browser. Run your first one.
             </p>
             <div className="pt-2">
               <Link href="/verdict/new" className="neo-btn-primary inline-flex text-xs">
-                SUBMIT FIRST STOCK &rarr;
+                REVIEW A PAYMENT &rarr;
               </Link>
             </div>
           </div>
@@ -153,30 +153,19 @@ export default function HistoryPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-3 flex-wrap">
                       <h3 className="font-display text-3xl text-paper-white tracking-wide">
-                        {v.thesisSnapshot.instrument}
+                        {v.decision.title}
                       </h3>
-                      <span className="font-mono text-xs text-cb-orange font-bold px-2 py-0.5 rounded bg-cb-orange/15 border border-cb-orange/30">
-                        {v.thesisSnapshot.direction}
+                      <span className="font-mono text-xs text-fog">{v.decision.merchant}</span>
+                      <span className="font-mono text-xs text-fog tabular">
+                        Requested: {fmtUSD(v.decision.amount)}
                       </span>
                       <span className="font-mono text-xs text-fog tabular">
-                        Ref Price: {fmtINR(v.thesisSnapshot.entryPrice)}
-                      </span>
-                      <span className="font-mono text-xs text-fog tabular">
-                        Ceiling: {fmtINR(v.thesisSnapshot.target)}
-                      </span>
-                      <span className="font-mono text-xs text-fog tabular">
-                        Floor: {fmtINR(v.thesisSnapshot.stopLoss)}
+                        Approved: <strong className={v.verdict.approvedAmount > 0 ? "text-cb-green" : "text-cb-red"}>{fmtUSD(v.verdict.approvedAmount)}</strong>
                       </span>
                     </div>
 
-                    {/* Thesis Killer Box */}
                     <div className="mt-3 p-3.5 rounded-lg border-2 border-graphite bg-black/40">
-                      <p className="font-sans text-xs text-bone leading-relaxed">
-                        <strong className="text-cb-orange font-mono uppercase font-bold mr-2">
-                          [THESIS KILLER]:
-                        </strong>
-                        &quot;{v.verdict.thesisKiller}&quot;
-                      </p>
+                      <p className="font-sans text-xs text-bone leading-relaxed">{v.verdict.summary}</p>
                     </div>
 
                     {/* Metrics Bar */}
@@ -188,10 +177,7 @@ export default function HistoryPage() {
                         </strong>
                       </span>
                       <span className="text-fog">
-                        Asymmetry Edge: <strong className="text-paper-white">{v.verdict.riskRewardRatio.toFixed(2)}:1</strong>
-                      </span>
-                      <span className="text-fog">
-                        Consensus: <strong className="text-paper-white">{v.verdict.confidence}%</strong>
+                        Confidence: <strong className="text-paper-white">{v.verdict.confidence}%</strong>
                       </span>
                       <div className="flex -space-x-1 ml-auto">
                         {v.deliberation.map((m) => (

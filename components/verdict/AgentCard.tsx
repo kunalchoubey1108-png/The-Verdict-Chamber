@@ -22,33 +22,33 @@ const AGENT_SPEC: Record<AgentId, { border: string; badge: string; text: string;
     border: "border-l-4 border-l-cb-blue border-t-2 border-r-2 border-b-2 border-graphite bg-surface",
     badge: "bg-cb-blue text-white font-bold",
     text: "text-cb-blue",
-    role: "QUANT ANALYST",
+    role: "ANALYST",
     decal: "ADSR // NUM-03",
-    stamp: "VOLATILITY_MATRIX",
+    stamp: "COST_MATH",
   },
   bull: {
     border: "border-l-4 border-l-cb-green border-t-2 border-r-2 border-b-2 border-graphite bg-surface",
     badge: "bg-cb-green text-white font-bold",
     text: "text-cb-green",
-    role: "BULL COUNSEL",
+    role: "ADVOCATE",
     decal: "CBRPNK // 01",
-    stamp: "MOMENTUM_RUN",
+    stamp: "CASE_FOR",
   },
   bear: {
     border: "border-l-4 border-l-cb-red border-t-2 border-r-2 border-b-2 border-graphite bg-surface",
     badge: "bg-cb-red text-white font-bold",
     text: "text-cb-red",
-    role: "BEAR COUNSEL",
+    role: "SKEPTIC",
     decal: "DPM SYSTM TS26",
-    stamp: "DRAWDOWN_TRAP",
+    stamp: "CASE_AGAINST",
   },
   risk: {
     border: "border-l-4 border-l-cb-amber border-t-2 border-r-2 border-b-2 border-graphite bg-surface",
     badge: "bg-cb-amber text-black font-bold",
     text: "text-cb-amber",
-    role: "RISK OFFICER",
+    role: "BUDGET OFFICER",
     decal: "SPEC // 25-VAR",
-    stamp: "LIMIT_ENFORCED",
+    stamp: "BUDGET_CHECK",
   },
 };
 
@@ -111,7 +111,7 @@ export function AgentCard({ message, isLatest }: AgentCardProps) {
           )}
           {message.status === "done" && (
             <span className="font-mono text-[10px] bg-carbon px-2 py-0.5 rounded border border-graphite text-raw-dim">
-              {new Date(message.timestamp || Date.now()).toLocaleTimeString("en-IN", {
+              {new Date(message.timestamp || Date.now()).toLocaleTimeString("en-US", {
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
@@ -128,7 +128,7 @@ export function AgentCard({ message, isLatest }: AgentCardProps) {
             <span className="typing-dot" />
             <span className="typing-dot" />
             <span className="typing-dot" />
-            <span className="ml-1 font-mono">{meta.name} is computing order book depth &amp; downside risks…</span>
+            <span className="ml-1 font-mono">{meta.name} is weighing the evidence…</span>
           </div>
         ) : (
           <div className="prose prose-invert max-w-none prose-p:my-2 prose-headings:font-tech prose-headings:text-white prose-strong:text-cb-orange prose-code:text-cb-amber prose-code:font-mono prose-code:text-xs">

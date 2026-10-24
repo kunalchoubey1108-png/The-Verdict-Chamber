@@ -21,28 +21,28 @@ const JUROR_SVGS: Record<AgentId, { bg: string; fill: string; secondary: string;
     bg: "#181B22",
     fill: "#3370FF",
     secondary: "#10223F",
-    tag: "QUANT",
+    tag: "ANALYST",
     code: "ADSR-01",
   },
   bull: {
     bg: "#181B22",
     fill: "#5B8E69",
     secondary: "#09271C",
-    tag: "BULL",
+    tag: "ADVOCATE",
     code: "CBRPNK",
   },
   bear: {
     bg: "#181B22",
     fill: "#D64038",
     secondary: "#290D11",
-    tag: "BEAR",
+    tag: "SKEPTIC",
     code: "DPM-TS26",
   },
   risk: {
     bg: "#181B22",
     fill: "#F2A900",
     secondary: "#2B200B",
-    tag: "RISK",
+    tag: "BUDGET",
     code: "SPEC-05",
   },
 };
@@ -58,7 +58,7 @@ export function JurorRail({ activeSpeaker, selectedSpeaker, onSelectSpeaker }: J
             PANEL ACTIVE
           </span>
           <span className="font-tech text-xs tracking-wider text-bone uppercase">
-            5-LLM Adversarial Chamber
+            5-Agent Review Panel
           </span>
         </div>
         <span className="font-mono text-[10px] text-cb-amber flex items-center gap-1.5 uppercase tracking-widest">

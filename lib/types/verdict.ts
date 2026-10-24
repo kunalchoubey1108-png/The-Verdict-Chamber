@@ -1,11 +1,12 @@
 // ── Verdict Types ─────────────────────────────────────────────────────────────
 // The structured output of the multi-agent jury deliberation.
 
-import type { EvidencePack } from "./evidence";
+import type { MoneyDecision } from "@/lib/validation/decision";
 
-export type VerdictOutcome = "TRADE" | "WATCH" | "AVOID";
+export type VerdictOutcome = "PROCEED" | "MODIFY" | "REJECT";
 
 // ── Agent identifiers ─────────────────────────────────────────────────────────
+// Internal ids are kept from the original stock jury; display names changed.
 
 export type AgentId = "bull" | "bear" | "risk" | "quant" | "judge";
 
@@ -15,48 +16,16 @@ export interface AgentMeta {
   name: string;
   /** Short role description */
   role: string;
-  /** Tailwind color class for the avatar */
-  color: string;
   /** Icon character / emoji */
   icon: string;
 }
 
 export const AGENTS: Record<AgentId, AgentMeta> = {
-  bull: {
-    id: "bull",
-    name: "Bull Counsel",
-    role: "Finds the strongest case for the trade",
-    color: "text-good",
-    icon: "🐂",
-  },
-  bear: {
-    id: "bear",
-    name: "Bear Counsel",
-    role: "Attacks every weakness in the thesis",
-    color: "text-critical",
-    icon: "🐻",
-  },
-  risk: {
-    id: "risk",
-    name: "Risk Officer",
-    role: "Focuses on downside, sizing & tail risk",
-    color: "text-serious",
-    icon: "🛡️",
-  },
-  quant: {
-    id: "quant",
-    name: "Quant Analyst",
-    role: "Evaluates signal quality and R:R ratio",
-    color: "text-accent",
-    icon: "📊",
-  },
-  judge: {
-    id: "judge",
-    name: "Presiding Judge",
-    role: "Synthesises all arguments, delivers the verdict",
-    color: "text-ink",
-    icon: "⚖️",
-  },
+  bull: { id: "bull", name: "Advocate", role: "Makes the strongest case for paying", icon: "👍" },
+  bear: { id: "bear", name: "Skeptic", role: "Attacks every weakness in the purchase", icon: "🔍" },
+  risk: { id: "risk", name: "Budget Officer", role: "Checks affordability, cash flow and commitments", icon: "🛡️" },
+  quant: { id: "quant", name: "Analyst", role: "Runs the numbers: annual cost, budget share, overlap", icon: "📊" },
+  judge: { id: "judge", name: "Presiding Judge", role: "Weighs every argument and rules", icon: "⚖️" },
 };
 
 // ── Deliberation messages ─────────────────────────────────────────────────────
@@ -75,42 +44,30 @@ export interface AgentMessage {
 
 export interface VerdictCard {
   outcome: VerdictOutcome;
-  /** Overall confidence in the verdict 0–100 */
+  /** Judge confidence 0–100 */
   confidence: number;
-  /** Portfolio risk score 0–100 (higher = riskier) */
+  /** Financial risk of the payment 0–100 (higher = riskier) */
   riskScore: number;
-  /** Probability this is a trap / false setup 0–100 */
-  trapProbability: number;
-  /** The single falsification condition — what kills the thesis */
-  thesisKiller: string;
-  /** Computed R:R ratio */
-  riskRewardRatio: number;
-  /** One-paragraph final synthesis */
+  /** USD the user may pay now: full amount (PROCEED), lower or equal (MODIFY), 0 (REJECT) */
+  approvedAmount: number;
+  /** For MODIFY: the exact change to make; empty otherwise */
+  modification: string;
+  /** The single condition under which this decision would be wrong */
+  dealBreaker: string;
+  /** Two-to-three sentence synthesis */
   summary: string;
-  /** Key conditions under which WATCH becomes TRADE */
-  watchConditions?: string[];
-  /** Key risk factors called out by the panel */
   keyRisks: string[];
 }
 
-// ── Full verdict (stored in localStorage / DB) ────────────────────────────────
+// ── Full verdict (stored in localStorage) ─────────────────────────────────────
 
 export interface FullVerdict {
   id: string;
-  thesisId: string;
   createdAt: string;
+  /** The decision as submitted; evidence is recomputed from it on display */
+  decision: MoneyDecision;
   deliberation: AgentMessage[];
   verdict: VerdictCard;
-  /** Evidence used to reach this verdict; absent on records created by older versions. */
-  evidencePack?: EvidencePack;
-  /** The thesis snapshot at verdict time */
-  thesisSnapshot: {
-    instrument: string;
-    direction: string;
-    entryPrice: number;
-    target: number;
-    stopLoss: number;
-  };
 }
 
 // ── SSE stream event types ────────────────────────────────────────────────────

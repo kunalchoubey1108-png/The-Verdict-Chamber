@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import type { TradeThesis } from "@/lib/types/thesis";
-import type { EvidencePack } from "@/lib/types/evidence";
 import type { AgentMessage, VerdictCard as VerdictCardType, AgentId, JuryEvent, FullVerdict } from "@/lib/types/verdict";
+import type { MoneyDecision } from "@/lib/validation/decision";
+import { buildEvidence } from "@/lib/decision/evidence";
 import { AgentCard } from "./AgentCard";
 import { VerdictCard } from "./VerdictCard";
-import { StockCockpit } from "./StockCockpit";
+import { EvidencePanel } from "./EvidencePanel";
 import { JurorRail } from "./JurorRail";
 import { saveVerdict } from "@/lib/utils/storage";
 import { nanoid } from "nanoid";
 
-type Phase = "loading-evidence" | "ready" | "deliberating" | "verdict" | "error";
+type Phase = "deliberating" | "verdict" | "error";
 
 async function getResponseError(response: Response, fallback: string): Promise<string> {
   try {
@@ -27,69 +27,39 @@ async function getResponseError(response: Response, fallback: string): Promise<s
 }
 
 interface JuryRoomProps {
-  thesis: TradeThesis;
+  decision: MoneyDecision;
 }
 
-export function JuryRoom({ thesis }: JuryRoomProps) {
-  const [phase, setPhase] = useState<Phase>("loading-evidence");
-  const [evidencePack, setEvidencePack] = useState<EvidencePack | null>(null);
+export function JuryRoom({ decision }: JuryRoomProps) {
+  const evidence = useMemo(() => buildEvidence(decision), [decision]);
+  const [phase, setPhase] = useState<Phase>("deliberating");
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [verdictCard, setVerdictCard] = useState<VerdictCardType | null>(null);
   const [currentSpeaker, setCurrentSpeaker] = useState<AgentId | null>(null);
   const [speakerFilter, setSpeakerFilter] = useState<AgentId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const hasStarted = useRef(false);
-  const juryStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auto-scroll gently as new tokens arrive
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Step 1: Fetch evidence pack
   useEffect(() => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
     const controller = new AbortController();
-
-    async function fetchEvidence() {
-      try {
-        const res = await fetch("/api/evidence", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(thesis),
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error(await getResponseError(res, "Failed to assemble market telemetry."));
-        const ep: EvidencePack = await res.json();
-        setEvidencePack(ep);
-        setPhase("ready");
-        juryStartTimerRef.current = setTimeout(() => startJury(ep, controller.signal), 600);
-      } catch (e) {
-        if (controller.signal.aborted) return;
-        setError(e instanceof Error ? e.message : "Evidence fetch failed");
-        setPhase("error");
-      }
-    }
-
-    fetchEvidence();
-    return () => {
-      controller.abort();
-      hasStarted.current = false;
-      if (juryStartTimerRef.current) clearTimeout(juryStartTimerRef.current);
-    };
+    startJury(controller.signal);
+    return () => controller.abort();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function startJury(ep: EvidencePack, signal: AbortSignal) {
+  async function startJury(signal: AbortSignal) {
     setPhase("deliberating");
     setMessages([]);
 
     const agentOrder: AgentId[] = ["bull", "bear", "risk", "quant", "judge"];
     const messageMap: Map<AgentId, AgentMessage> = new Map();
+    const snapshot = () => agentOrder.filter((a) => messageMap.has(a)).map((a) => ({ ...messageMap.get(a)! }));
 
     let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
     let receivedVerdict = false;
@@ -97,7 +67,7 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
       const res = await fetch("/api/jury", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thesis: ep.thesis }),
+        body: JSON.stringify({ decision }),
         signal,
       });
 
@@ -134,16 +104,13 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
 
           if (event.type === "agent_start" && event.agent) {
             setCurrentSpeaker(event.agent);
-            const msg: AgentMessage = {
+            messageMap.set(event.agent, {
               agent: event.agent,
               content: "",
               timestamp: new Date().toISOString(),
               status: "thinking",
-            };
-            messageMap.set(event.agent, msg);
-            setMessages([...agentOrder
-              .filter((a) => messageMap.has(a))
-              .map((a) => ({ ...messageMap.get(a)! }))]);
+            });
+            setMessages(snapshot());
           }
 
           if (event.type === "agent_chunk" && event.agent && event.chunk != null) {
@@ -151,9 +118,7 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
             if (msg) {
               msg.content += event.chunk;
               msg.status = "streaming";
-              setMessages([...agentOrder
-                .filter((a) => messageMap.has(a))
-                .map((a) => ({ ...messageMap.get(a)! }))]);
+              setMessages(snapshot());
             }
           }
 
@@ -161,9 +126,7 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
             const msg = messageMap.get(event.agent);
             if (msg) {
               msg.status = "done";
-              setMessages([...agentOrder
-                .filter((a) => messageMap.has(a))
-                .map((a) => ({ ...messageMap.get(a)! }))]);
+              setMessages(snapshot());
             }
           }
 
@@ -173,24 +136,13 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
             setVerdictCard(event.verdict);
             setPhase("verdict");
 
-            const finalMessages = [...agentOrder
-              .filter((a) => messageMap.has(a))
-              .map((a) => ({ ...messageMap.get(a)! }))];
-
             const fullVerdict: FullVerdict = {
               id: nanoid(10),
-              thesisId: thesis.id,
               createdAt: new Date().toISOString(),
-              deliberation: finalMessages,
+              decision,
+              // The judge's own message is finished once its verdict arrives.
+              deliberation: snapshot().map((m) => ({ ...m, status: "done" as const })),
               verdict: event.verdict,
-              evidencePack: ep,
-              thesisSnapshot: {
-                instrument: thesis.instrument.name,
-                direction: thesis.direction,
-                entryPrice: thesis.entryPrice || (ep ? ep.quote.ltp : 0),
-                target: thesis.target || (ep ? ep.quote.ltp * 1.08 : 0),
-                stopLoss: thesis.stopLoss || (ep ? ep.quote.ltp * 0.96 : 0),
-              },
             };
             if (!saveVerdict(fullVerdict)) {
               setPersistenceWarning("Verdict generated, but this browser could not save it. Check available site storage and keep this page open to review it.");
@@ -217,55 +169,16 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
     }
   }
 
-  async function handleShare() {
-    if (typeof window !== "undefined") {
-      try {
-        if (!navigator.clipboard?.writeText) throw new Error("Clipboard access is unavailable.");
-        await navigator.clipboard.writeText(window.location.href);
-        setCopiedLink(true);
-        setTimeout(() => setCopiedLink(false), 2000);
-      } catch {
-        setError("Could not copy the link. You can copy it from the address bar.");
-      }
-    }
-  }
-
-  if (phase === "loading-evidence") {
-    return (
-      <div className="flex flex-col items-center justify-center gap-6 py-20 text-center animate-fade-in">
-        <div className="relative">
-          <div className="w-20 h-20 rounded-[16px] bg-carbon border-2 border-graphite flex items-center justify-center" style={{ boxShadow: '4px 4px 0px 0px #E28743' }}>
-            <span className="font-display text-3xl text-cb-orange">⚖</span>
-          </div>
-          <span className="absolute -top-2 -right-2 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cb-orange opacity-75" />
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-cb-orange" />
-          </span>
-        </div>
-        <div className="space-y-2">
-          <div className="font-display text-3xl text-white uppercase tracking-wider">Assembling Docket</div>
-          <div className="text-xs font-mono text-raw-dim max-w-sm mx-auto leading-relaxed uppercase tracking-wider">
-            Querying market quotes for {thesis.instrument.symbol} · Calibrating risk models · Summoning 5-Agent Chamber
-          </div>
-        </div>
-        <div className="flex gap-2 pt-2">
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-        </div>
-      </div>
-    );
-  }
-
   if (phase === "error") {
     return (
       <div className="neo-card text-center space-y-5 py-14 max-w-lg mx-auto animate-slide-up" style={{ boxShadow: '4px 4px 0px 0px #D64038' }}>
         <div className="w-16 h-16 rounded-[12px] bg-cb-red/10 border-2 border-cb-red/40 flex items-center justify-center mx-auto text-2xl">⚠️</div>
-        <h2 className="font-display text-2xl text-white uppercase tracking-wider">Chamber Interrupted</h2>
+        <h2 className="font-display text-2xl text-white uppercase tracking-wider">Review Interrupted</h2>
         <div className="text-xs font-mono text-raw-dim max-w-sm mx-auto leading-relaxed" role="alert">{error}</div>
+        <p className="text-xs text-fog">No payment was created.</p>
         <div className="pt-2">
           <Link href="/verdict/new" className="neo-btn-primary inline-flex text-xs px-8 py-3">
-            ← RESUBMIT INQUIRY
+            ← START OVER
           </Link>
         </div>
       </div>
@@ -278,13 +191,13 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
 
   return (
     <div className="space-y-7">
-      {error && <p className="rounded-lg border border-cb-amber/50 bg-cb-amber/10 p-3 text-sm text-cb-amber" role="status">{error}</p>}
       {persistenceWarning && <p className="rounded-lg border border-cb-amber/50 bg-cb-amber/10 p-3 text-sm text-cb-amber" role="status">{persistenceWarning}</p>}
       <p className="sr-only" role="status" aria-live="polite">
         {currentSpeaker ? `${currentSpeaker} is speaking.` : phase === "verdict" ? "Deliberation complete. Verdict available." : ""}
       </p>
-      {/* 1. TOP SECTION: Stock Context Cockpit */}
-      {evidencePack && <StockCockpit evidencePack={evidencePack} />}
+
+      {/* 1. TOP SECTION: Computed evidence */}
+      <EvidencePanel decision={decision} evidence={evidence} />
 
       {/* 2. MIDDLE SECTION: Interactive Juror Rail */}
       <JurorRail
@@ -324,8 +237,8 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
           {messages.length === 0 && phase === "deliberating" && (
             <div className="p-8 rounded-[16px] border-2 border-graphite bg-carbon flex flex-col items-center justify-center gap-3 text-center animate-pulse-soft">
               <span className="font-display text-4xl text-cb-orange">⏳</span>
-              <span className="font-display text-lg text-white uppercase tracking-wider">Convening the Adversarial Panel</span>
-              <span className="text-xs text-raw-dim font-mono uppercase tracking-wider">The first juror is currently reviewing order book depth</span>
+              <span className="font-display text-lg text-white uppercase tracking-wider">Convening the Panel</span>
+              <span className="text-xs text-raw-dim font-mono uppercase tracking-wider">The Advocate is reviewing the evidence</span>
             </div>
           )}
 
@@ -342,63 +255,37 @@ export function JuryRoom({ thesis }: JuryRoomProps) {
 
         {/* 4. SIDEBAR: Verdict HUD stays visible and works without hover */}
         <aside className="lg:sticky lg:top-24 min-w-0 space-y-4">
-          <div className="space-y-4">
-            {verdictCard && evidencePack ? (
-              <VerdictCard verdict={verdictCard} evidencePack={evidencePack} />
-            ) : (
-              <div className="rounded-[18px] bg-carbon border-2 border-graphite p-6 text-center space-y-4" style={{ boxShadow: '4px 4px 0px 0px #262A34' }}>
-                <div className="w-14 h-14 rounded-[12px] bg-black border-2 border-graphite mx-auto flex items-center justify-center text-2xl">
-                  ⚖️
-                </div>
-                <div className="space-y-2">
-                  <div className="font-display text-lg text-white uppercase tracking-wider">
-                    {phase === "deliberating"
-                      ? "Chamber in Session"
-                      : "Decision Docket"}
-                  </div>
-                  <p className="text-xs font-mono text-raw-dim leading-relaxed uppercase tracking-wider">
-                    The Presiding Judge will deliver the final binding decree once cross-examination concludes.
-                  </p>
-                </div>
-
-                {phase === "deliberating" && (
-                  <div className="pt-2 flex flex-col items-center gap-2">
-                    <div className="flex gap-1.5">
-                      <span className="typing-dot" />
-                      <span className="typing-dot" />
-                      <span className="typing-dot" />
-                    </div>
-                    <span className="text-[10px] font-tech text-cb-orange uppercase tracking-widest">
-                      Hearing Testimonies…
-                    </span>
-                  </div>
-                )}
+          {verdictCard ? (
+            <VerdictCard verdict={verdictCard} decision={decision} />
+          ) : (
+            <div className="rounded-[18px] bg-carbon border-2 border-graphite p-6 text-center space-y-4" style={{ boxShadow: '4px 4px 0px 0px #262A34' }}>
+              <div className="w-14 h-14 rounded-[12px] bg-black border-2 border-graphite mx-auto flex items-center justify-center text-2xl">
+                ⚖️
               </div>
-            )}
-
-            {/* Action Row */}
-            {phase === "verdict" && (
-              <div className="flex flex-col sm:flex-row gap-2 font-mono text-xs pt-1">
-                <Link
-                  href="/verdict/new"
-                  className="neo-btn-primary flex-1 justify-center py-3 text-center text-xs"
-                >
-                  ASSESS ANOTHER STOCK →
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="neo-btn-ghost justify-center py-3 text-xs px-4"
-                  title="Copy share link"
-                >
-                  <span className="material-symbols-outlined text-[16px]">
-                    {copiedLink ? "check" : "share"}
-                  </span>
-                  <span>{copiedLink ? "Copied" : "Share"}</span>
-                </button>
+              <div className="space-y-2">
+                <div className="font-display text-lg text-white uppercase tracking-wider">Panel in Session</div>
+                <p className="text-xs font-mono text-raw-dim leading-relaxed uppercase tracking-wider">
+                  The Presiding Judge rules after all four counsel have argued. No money moves until you confirm.
+                </p>
               </div>
-            )}
-          </div>
+              <div className="pt-2 flex flex-col items-center gap-2">
+                <div className="flex gap-1.5">
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                </div>
+                <span className="text-[10px] font-tech text-cb-orange uppercase tracking-widest">
+                  Hearing Arguments…
+                </span>
+              </div>
+            </div>
+          )}
+
+          {phase === "verdict" && (
+            <Link href="/verdict/new" className="neo-btn-ghost flex w-full justify-center py-3 text-xs">
+              REVIEW ANOTHER PAYMENT →
+            </Link>
+          )}
         </aside>
       </div>
     </div>
