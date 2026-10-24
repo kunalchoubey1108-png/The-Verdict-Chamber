@@ -179,6 +179,12 @@ export default function HistoryPage() {
                       <span className="text-fog">
                         Confidence: <strong className="text-paper-white">{v.verdict.confidence}%</strong>
                       </span>
+                      <span className="text-fog">
+                        Payment:{" "}
+                        <strong className={v.payment ? "text-cb-green" : "text-paper-white"}>
+                          {v.payment ? `${v.payment.status} ${fmtUSD(v.payment.amount)}` : v.verdict.outcome === "REJECT" ? "none (rejected)" : "not paid"}
+                        </strong>
+                      </span>
                       <div className="flex -space-x-1 ml-auto">
                         {v.deliberation.map((m) => (
                           <span

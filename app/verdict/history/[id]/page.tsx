@@ -10,6 +10,7 @@ import { loadVerdict } from "@/lib/utils/storage";
 import { fmtDateTime, fmtUSD } from "@/lib/utils/format";
 import { VerdictCard } from "@/components/verdict/VerdictCard";
 import { EvidencePanel } from "@/components/verdict/EvidencePanel";
+import { PaymentReceipt } from "@/components/verdict/PaymentPanel";
 
 export default function SavedVerdictPage() {
   const { id } = useParams<{ id: string }>();
@@ -61,7 +62,16 @@ export default function SavedVerdictPage() {
 
         <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,370px)] items-start">
           <EvidencePanel decision={decision} evidence={buildEvidence(decision)} />
-          <VerdictCard verdict={record.verdict} decision={decision} />
+          <div className="space-y-4">
+            <VerdictCard verdict={record.verdict} decision={decision} />
+            {record.payment ? (
+              <PaymentReceipt payment={record.payment} />
+            ) : (
+              <p className="rounded-[12px] border-2 border-graphite bg-carbon p-4 font-mono text-xs uppercase text-fog">
+                {record.verdict.outcome === "REJECT" ? `${fmtUSD(decision.amount)} not spent` : "No payment recorded"}
+              </p>
+            )}
+          </div>
         </div>
 
         <section className="space-y-4">
