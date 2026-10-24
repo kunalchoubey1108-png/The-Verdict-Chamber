@@ -188,8 +188,8 @@ export function DecisionForm() {
               <p className="font-mono text-xs text-fog">None added. Add the ones you pay for so the jury can spot overlap.</p>
             )}
             {subscriptions.fields.map((field, i) => (
-              <div key={field.id} className="grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[2fr_1fr_1fr_auto]">
-                <input aria-label={`Subscription ${i + 1} name`} className={`${inputClass} col-span-2 sm:col-span-1`} placeholder="Name" {...register(`subscriptions.${i}.name`)} />
+              <div key={field.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 sm:grid-cols-[2fr_1fr_1fr_auto]">
+                <input aria-label={`Subscription ${i + 1} name`} className={`${inputClass} col-span-3 sm:col-span-1`} placeholder="Name" {...register(`subscriptions.${i}.name`)} />
                 <select aria-label={`Subscription ${i + 1} category`} className={inputClass} {...register(`subscriptions.${i}.category`)}>
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>{c}</option>

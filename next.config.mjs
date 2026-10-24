@@ -7,7 +7,7 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig = {
   // This directory is the standalone app root, even when nested in the prototype repo.
   outputFileTracingRoot: projectRoot,
-  // Legacy NiveshOS vanilla engine boots once — avoid double-invoke in dev
+  // Off so dev mode does not start each jury stream (5 AI calls) twice
   reactStrictMode: false,
 
   // AI SDK streaming requires these packages to run server-side only

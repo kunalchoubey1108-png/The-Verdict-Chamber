@@ -1,5 +1,4 @@
 import "./globals.css";
-import "./styles.css";
 
 export const metadata = {
   title: "VerdictPay — An AI jury for every payment",
