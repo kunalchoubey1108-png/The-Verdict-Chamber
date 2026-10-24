@@ -27,6 +27,15 @@ async function getResponseError(response: Response, fallback: string): Promise<s
   return fallback;
 }
 
+export function DemoJuryNotice() {
+  return (
+    <p className="rounded-lg border-2 border-cb-amber/60 bg-cb-amber/10 p-3 text-sm text-cb-amber" role="status">
+      <strong>Demo jury:</strong> Gemini is not configured (or a call failed), so some arguments come from the built-in
+      deterministic jury, not a live AI model. Set <code>GOOGLE_GENERATIVE_AI_API_KEY</code> for live AI.
+    </p>
+  );
+}
+
 interface JuryRoomProps {
   decision: MoneyDecision;
 }
@@ -140,6 +149,7 @@ export function JuryRoom({ decision }: JuryRoomProps) {
             const msg = messageMap.get(event.agent);
             if (msg) {
               msg.status = "done";
+              msg.simulated = event.simulated;
               setMessages(snapshot());
             }
           }
@@ -157,6 +167,7 @@ export function JuryRoom({ decision }: JuryRoomProps) {
               // The judge's own message is finished once its verdict arrives.
               deliberation: snapshot().map((m) => ({ ...m, status: "done" as const })),
               verdict: event.verdict,
+              approvalToken: event.approvalToken ?? null,
             };
             setRecord(fullVerdict);
             setApprovalToken(event.approvalToken ?? null);
@@ -208,6 +219,7 @@ export function JuryRoom({ decision }: JuryRoomProps) {
   return (
     <div className="space-y-7">
       {persistenceWarning && <p className="rounded-lg border border-cb-amber/50 bg-cb-amber/10 p-3 text-sm text-cb-amber" role="status">{persistenceWarning}</p>}
+      {messages.some((m) => m.simulated) && <DemoJuryNotice />}
       <p className="sr-only" role="status" aria-live="polite">
         {currentSpeaker ? `${currentSpeaker} is speaking.` : phase === "verdict" ? "Deliberation complete. Verdict available." : ""}
       </p>

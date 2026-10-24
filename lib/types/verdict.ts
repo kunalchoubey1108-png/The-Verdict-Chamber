@@ -38,6 +38,8 @@ export interface AgentMessage {
   timestamp: string;
   /** Streaming state */
   status: "thinking" | "streaming" | "done";
+  /** True when the argument came from the deterministic demo jury, not Gemini */
+  simulated?: boolean;
 }
 
 // ── Final verdict card ────────────────────────────────────────────────────────
@@ -81,6 +83,8 @@ export interface FullVerdict {
   decision: MoneyDecision;
   deliberation: AgentMessage[];
   verdict: VerdictCard;
+  /** Server-signed approval; lets the saved review be paid until it expires */
+  approvalToken?: string | null;
   /** Present once the user paid (or simulated paying) the approved amount */
   payment?: PaymentRecord;
 }
@@ -98,6 +102,8 @@ export interface JuryEvent {
   type: JuryEventType;
   agent?: AgentId;
   chunk?: string;
+  /** On agent_done: whether this argument came from the demo jury */
+  simulated?: boolean;
   verdict?: VerdictCard;
   /** Server-signed approval sent with the verdict; null when payments are off or REJECT */
   approvalToken?: string | null;

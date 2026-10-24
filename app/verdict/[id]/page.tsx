@@ -1,25 +1,32 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { MoneyDecision } from "@/lib/validation/decision";
 import { BILLING_LABELS } from "@/lib/validation/decision";
-import { loadDecision } from "@/lib/utils/storage";
+import { findVerdictForDecision, loadDecision } from "@/lib/utils/storage";
 import { fmtUSD } from "@/lib/utils/format";
 import { JuryRoom } from "@/components/verdict/JuryRoom";
 
 export default function ReviewRoomPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [decision, setDecision] = useState<MoneyDecision | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!id) return;
+    // Already ruled on: show the saved review instead of re-running the jury.
+    const saved = findVerdictForDecision(id);
+    if (saved) {
+      router.replace(`/verdict/history/${saved.id}`);
+      return;
+    }
     const d = loadDecision(id);
     if (d) setDecision(d);
     else setNotFound(true);
-  }, [id]);
+  }, [id, router]);
 
   return (
     <main className="min-h-screen route-enter bg-raw-bg text-bone grid-bg selection:bg-cb-orange selection:text-black">

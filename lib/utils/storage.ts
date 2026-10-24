@@ -20,6 +20,7 @@ const persistedVerdictSchema = z.object({
     content: z.string().max(100_000),
     timestamp: z.string().datetime(),
     status: z.enum(["thinking", "streaming", "done"]),
+    simulated: z.boolean().optional(),
   })).max(5),
   verdict: z.object({
     outcome: z.enum(["PROCEED", "MODIFY", "REJECT"]),
@@ -31,6 +32,7 @@ const persistedVerdictSchema = z.object({
     summary: z.string().max(2_000),
     keyRisks: z.array(z.string().max(300)).max(5),
   }),
+  approvalToken: z.string().max(4_096).nullable().optional(),
   payment: z.object({
     status: z.string().max(40),
     amount: z.number().finite().min(0),
@@ -107,6 +109,11 @@ function loadHistoryIds(): string[] {
   return Array.isArray(value)
     ? value.filter((id): id is string => typeof id === "string" && id.length > 0 && id.length <= 64).slice(0, 50)
     : [];
+}
+
+/** The saved review for a decision, if the jury already ruled on it. */
+export function findVerdictForDecision(decisionId: string): FullVerdict | null {
+  return loadVerdictHistory().find((v) => v.decision.id === decisionId) ?? null;
 }
 
 export function deleteVerdict(id: string): void {

@@ -135,6 +135,25 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Impact, computed only from the reviews saved in this browser */}
+            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {[
+                { label: "Payments reviewed", value: String(history.length) },
+                {
+                  label: "Changed or rejected by the jury",
+                  value: String(history.filter((v) => v.verdict.outcome !== "PROCEED").length),
+                },
+                {
+                  label: "Requested but not approved",
+                  value: fmtUSD(history.reduce((sum, v) => sum + (v.decision.amount - v.verdict.approvedAmount), 0)),
+                },
+              ].map((stat) => (
+                <div key={stat.label} className="neo-card bg-raw-surface p-4">
+                  <dt className="font-mono text-[10px] uppercase tracking-wider text-fog">{stat.label}</dt>
+                  <dd className="mt-1 font-display text-3xl text-paper-white tabular">{stat.value}</dd>
+                </div>
+              ))}
+            </dl>
             {history.map((v) => (
               <div
                 key={v.id}

@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AGENTS, type FullVerdict } from "@/lib/types/verdict";
+import { AGENTS, type FullVerdict, type PaymentRecord } from "@/lib/types/verdict";
 import { BILLING_LABELS } from "@/lib/validation/decision";
 import { buildEvidence } from "@/lib/decision/evidence";
-import { loadVerdict } from "@/lib/utils/storage";
+import { loadVerdict, saveVerdict } from "@/lib/utils/storage";
 import { fmtDateTime, fmtUSD } from "@/lib/utils/format";
 import { VerdictCard } from "@/components/verdict/VerdictCard";
 import { EvidencePanel } from "@/components/verdict/EvidencePanel";
-import { PaymentReceipt } from "@/components/verdict/PaymentPanel";
+import { PaymentPanel } from "@/components/verdict/PaymentPanel";
+import { DemoJuryNotice } from "@/components/verdict/JuryRoom";
 
 export default function SavedVerdictPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,15 @@ export default function SavedVerdictPage() {
     setRecord(loadVerdict(id));
     setLoaded(true);
   }, [id]);
+
+  const handlePaid = useCallback((payment: PaymentRecord) => {
+    setRecord((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, payment };
+      saveVerdict(updated);
+      return updated;
+    });
+  }, []);
 
   if (!loaded) {
     return <main className="min-h-screen route-enter bg-raw-bg p-10 text-fog">Loading saved review…</main>;
@@ -60,17 +70,19 @@ export default function SavedVerdictPage() {
           </p>
         </header>
 
+        {record.deliberation.some((m) => m.simulated) && <DemoJuryNotice />}
+
         <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,370px)] items-start">
           <EvidencePanel decision={decision} evidence={buildEvidence(decision)} />
           <div className="space-y-4">
             <VerdictCard verdict={record.verdict} decision={decision} />
-            {record.payment ? (
-              <PaymentReceipt payment={record.payment} />
-            ) : (
-              <p className="rounded-[12px] border-2 border-graphite bg-carbon p-4 font-mono text-xs uppercase text-fog">
-                {record.verdict.outcome === "REJECT" ? `${fmtUSD(decision.amount)} not spent` : "No payment recorded"}
-              </p>
-            )}
+            <PaymentPanel
+              decision={decision}
+              verdict={record.verdict}
+              approvalToken={record.approvalToken ?? null}
+              payment={record.payment}
+              onPaid={handlePaid}
+            />
           </div>
         </div>
 

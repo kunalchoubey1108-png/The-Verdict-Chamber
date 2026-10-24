@@ -111,6 +111,7 @@ export async function runJury(
 
     let text = "";
     let judge: JudgeOutput | undefined;
+    let simulated = !live;
     try {
       if (!live) {
         ({ text, judge } = simulate(id));
@@ -131,6 +132,7 @@ export async function runJury(
     } catch (err) {
       if (signal?.aborted) return verdict;
       console.warn(`[runJury] Falling back to simulated argument for agent ${id}:`, err);
+      simulated = true;
       ({ text, judge } = simulate(id));
       await streamWords("\n\n" + text, id, onEvent, signal);
     }
@@ -140,7 +142,7 @@ export async function runJury(
       verdict = normalizeVerdict(judge, decision);
       onEvent({ type: "verdict", verdict });
     }
-    onEvent({ type: "agent_done", agent: id });
+    onEvent({ type: "agent_done", agent: id, simulated });
   }
 
   return verdict;

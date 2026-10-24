@@ -15,15 +15,15 @@ const AGENT_SPEC: Record<AgentId, { border: string; badge: string; text: string;
     badge: "bg-cb-orange text-black font-bold",
     text: "text-cb-orange",
     role: "PRESIDING JUDGE",
-    decal: "UA 570-B",
-    stamp: "CHAMBER_DECREE",
+    decal: "JUROR 05",
+    stamp: "RULING",
   },
   quant: {
     border: "border-l-4 border-l-cb-blue border-t-2 border-r-2 border-b-2 border-graphite bg-surface",
     badge: "bg-cb-blue text-white font-bold",
     text: "text-cb-blue",
     role: "ANALYST",
-    decal: "ADSR // NUM-03",
+    decal: "JUROR 04",
     stamp: "COST_MATH",
   },
   bull: {
@@ -31,7 +31,7 @@ const AGENT_SPEC: Record<AgentId, { border: string; badge: string; text: string;
     badge: "bg-cb-green text-white font-bold",
     text: "text-cb-green",
     role: "ADVOCATE",
-    decal: "CBRPNK // 01",
+    decal: "JUROR 01",
     stamp: "CASE_FOR",
   },
   bear: {
@@ -39,7 +39,7 @@ const AGENT_SPEC: Record<AgentId, { border: string; badge: string; text: string;
     badge: "bg-cb-red text-white font-bold",
     text: "text-cb-red",
     role: "SKEPTIC",
-    decal: "DPM SYSTM TS26",
+    decal: "JUROR 02",
     stamp: "CASE_AGAINST",
   },
   risk: {
@@ -47,7 +47,7 @@ const AGENT_SPEC: Record<AgentId, { border: string; badge: string; text: string;
     badge: "bg-cb-amber text-black font-bold",
     text: "text-cb-amber",
     role: "BUDGET OFFICER",
-    decal: "SPEC // 25-VAR",
+    decal: "JUROR 03",
     stamp: "BUDGET_CHECK",
   },
 };
@@ -143,9 +143,15 @@ export function AgentCard({ message, isLatest }: AgentCardProps) {
       {/* Tech Footer Strip */}
       <div className="flex flex-wrap items-center justify-between gap-2 pt-3 mt-4 border-t border-graphite/50 text-[10px] font-mono text-raw-dim">
         <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded bg-black/60 border border-graphite flex items-center gap-1 uppercase tracking-wider">
-            <span className="text-cb-green">●</span> EVID-VERIFIED
-          </span>
+          {message.status === "done" && (
+            <span className="px-2 py-0.5 rounded bg-black/60 border border-graphite flex items-center gap-1 uppercase tracking-wider">
+              {message.simulated ? (
+                <><span className="text-cb-amber">●</span> DEMO JUROR</>
+              ) : (
+                <><span className="text-cb-green">●</span> LIVE AI</>
+              )}
+            </span>
+          )}
           <span className="px-2 py-0.5 rounded bg-black/60 border border-graphite flex items-center gap-1 uppercase tracking-wider">
             <span className="text-cb-orange">■</span> {spec.stamp}
           </span>
