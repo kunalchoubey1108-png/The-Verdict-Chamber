@@ -19,6 +19,21 @@ npm-debug.log*
 # local secrets
 .env*
 !.env.local.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials*.json
+service-account*.json
+secrets.*
+*.secret
+
+# deployment / tooling state
+.vercel/
+coverage/
+*.log
 
 # macOS Finder metadata
 .DS_Store
