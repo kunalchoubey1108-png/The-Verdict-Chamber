@@ -1,4 +1,4 @@
-# The Verdict Chamber — Hackathon Edition (working title: VerdictPay)
+# VerdictPay — Hackathon Edition of The Verdict Chamber
 
 > **You are on the `hackathon` branch.** This branch holds the hackathon version of the project. The original, untouched Verdict Chamber lives on the [`main` branch](https://github.com/kunalchoubey1108-png/The-Verdict-Chamber/tree/main).
 
@@ -6,13 +6,9 @@
 
 The Verdict Chamber is a pre-trade risk intelligence app. Submit an investment thesis and the app assembles available market evidence, then streams a structured review from a five-role jury: Bull, Bear, Risk, Quant, and Judge. When Gemini is not configured, the jury uses a deterministic simulated response. This is decision-support software for educational purposes, not personalized investment advice.
 
-The canonical application is the Next.js app in this repository. The older NiveshOS static prototype and its original build contract are retained as legacy context; they are not the instructions for running this app.
+## The hackathon version: VerdictPay
 
-## The hackathon version
-
-This branch is the starting point for the hackathon submission. It may evolve Verdict Chamber into a new product, provisionally called **VerdictPay**, while `main` stays frozen as the reference version.
-
-**Purpose:** _TODO — one or two sentences on the problem VerdictPay solves and the hackathon theme/track it targets._
+Built for the **Build What's Next with PayPal and AI** hackathon. VerdictPay keeps the original's adversarial jury but points it at money decisions instead of stock theses: describe a purchase, subscription or invoice, five AI agents debate it, and the judge rules **PROCEED**, **MODIFY** (pay a changed, lower-or-equal amount) or **REJECT**. PayPal then executes only what the jury and the user approve.
 
 ### What changed for the hackathon
 
@@ -24,7 +20,11 @@ Keep this list current as work lands on this branch:
 - Added an MIT `LICENSE`.
 - Switched the default Gemini model from the retired `gemini-1.5-flash` to `gemini-3.8-flash`.
 - Added PayPal sandbox and verdict-signing placeholders to `.env.local.example`.
-- _TODO — add VerdictPay features, changed routes, new integrations, and new environment variables here._
+- Replaced the stock-thesis flow with money decisions: a decision form with demo examples, deterministic evidence (budget share, first-year cost, subscription overlap, urgency wording), new juror roles (Advocate, Skeptic, Budget Officer, Analyst, Judge) and PROCEED / MODIFY / REJECT verdicts.
+- The judge now returns structured output (schema-validated) instead of JSON scraped from text, and server-side money rules cap the approved amount at the requested amount.
+- The jury always delivers a verdict: if Gemini is missing or a call fails, a deterministic simulation stands in.
+- Removed the stock-only code (quotes, market signals, Finnhub) and the legacy NiveshOS prototype. Both remain on `main`.
+- _Upcoming: PayPal Sandbox checkout gated by the verdict (phase 2)._
 
 To see every change relative to the original:
 
@@ -70,7 +70,6 @@ Set these in `.env.local` (local) or in your hosting provider's environment sett
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | No | Gemini API key for model-generated jury arguments. `GEMINI_API_KEY` is an accepted alias. Get one at https://aistudio.google.com/app/apikey. |
-| `FINNHUB_API_KEY` | No | Finnhub quote integration; fallback evidence is used when unavailable. Get one at https://finnhub.io/register. |
 | `GEMINI_MODEL` | No | Gemini model override; defaults to `gemini-3.8-flash`. |
 | `PAYPAL_CLIENT_ID` | For payments | PayPal **sandbox** REST app client ID. Create one at https://developer.paypal.com/dashboard/applications/sandbox. |
 | `PAYPAL_CLIENT_SECRET` | For payments | PayPal **sandbox** REST app secret. Server-side only. |
@@ -92,27 +91,20 @@ The jury route has a conservative 60-second function duration cap. If longer Gem
 ## Main routes
 
 - `/` — product entry point
-- `/verdict/new` — submit a thesis
-- `/verdict/[id]` — view the jury deliberation and verdict
+- `/verdict/new` — describe a payment (or load a demo example)
+- `/verdict/[id]` — watch the jury deliberate and see the verdict
 - `/verdict/history` — review saved verdicts
-- `POST /api/evidence` — assemble evidence for a thesis
-- `POST /api/jury` — stream jury events as server-sent events
-- `GET /api/quotes` — quote endpoint
+- `POST /api/jury` — validate a decision, recompute evidence server-side, and stream jury events as server-sent events
 
-Verdict history is stored in the current browser only. Use **Download Report Archive** on the history page to save a versioned JSON copy. The archive may include thesis details, evidence, and jury arguments; it is generated locally and should be handled like private financial information.
-
-The NiveshOS section uses local demo profiles. It does not connect to Account Aggregators, brokers, or a live registry, and all order handoffs are simulations. Its **Import CAS** tool reads supported statement files in the browser; no statement is uploaded.
+Decision history is stored in the current browser only. Use **Download Report Archive** on the history page to save a versioned JSON copy; it contains the decisions and jury arguments and should be handled like private financial information.
 
 ## Project structure
 
-- `app/` — Next.js App Router pages, layouts, and API routes
-- `components/verdict/` — thesis, evidence, jury, and verdict UI
-- `lib/agents/` — jury prompts and orchestration
-- `lib/signals/` — quote retrieval and evidence calculations
+- `app/` — Next.js App Router pages, layouts, and the jury API route
+- `components/verdict/` — decision form, evidence panel, jury room, verdict card
+- `lib/decision/` — deterministic evidence computed from the decision
+- `lib/agents/` — jury prompts, orchestration, and verdict rules (schema, money caps, offline fallback)
 - `lib/types/` and `lib/validation/` — shared contracts and input validation
-- `tools/` — market snapshot utilities
-
-`README.ai` contains additional contributor guidance. `BUILD_SPEC.md` describes the retained NiveshOS prototype and is labeled as legacy documentation.
 
 ## Accessing the original version
 
