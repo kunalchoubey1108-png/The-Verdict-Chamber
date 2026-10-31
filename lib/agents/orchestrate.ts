@@ -124,10 +124,15 @@ export async function runJury(
         await streamWords(text, id, onEvent, signal);
       } else {
         const result = streamText({ model: google(MODEL), system, prompt, abortSignal: signal });
-        for await (const chunk of result.textStream) {
-          text += chunk;
-          onEvent({ type: "agent_chunk", agent: id, chunk });
+        // fullStream, not textStream: textStream silently drops provider errors.
+        for await (const part of result.fullStream) {
+          if (part.type === "error") throw part.error;
+          if (part.type === "text-delta") {
+            text += part.textDelta;
+            onEvent({ type: "agent_chunk", agent: id, chunk: part.textDelta });
+          }
         }
+        if (!text.trim()) throw new Error(`Empty response from ${MODEL}`);
       }
     } catch (err) {
       if (signal?.aborted) return verdict;
@@ -138,11 +143,13 @@ export async function runJury(
     }
 
     prior.push({ agent: id, text });
+    // agent_done first: the client saves the review when the verdict arrives,
+    // and the judge's `simulated` flag must already be on its message.
+    onEvent({ type: "agent_done", agent: id, simulated });
     if (judge) {
       verdict = normalizeVerdict(judge, decision);
       onEvent({ type: "verdict", verdict });
     }
-    onEvent({ type: "agent_done", agent: id, simulated });
   }
 
   return verdict;
