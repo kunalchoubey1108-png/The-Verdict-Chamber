@@ -22,7 +22,7 @@ You describe a money decision: what it is, who gets paid, the amount, how it bil
 2. Four AI counsel argue in order (Advocate, Skeptic, Budget Officer, Analyst), each seeing the arguments before it.
 3. A Presiding Judge rules **PROCEED**, **MODIFY** or **REJECT**, with the approved amount, required change, key risks and a "reconsider if" condition.
 4. If the jury approves, you confirm the exact amount and payee, and PayPal charges only that approved amount. A rejected payment never gets a PayPal button.
-5. Every review is kept as an audit trail with the full debate and the PayPal order and capture IDs, plus a summary of how many payments the jury changed or rejected and how many dollars were requested but not approved.
+5. Each review is kept as an audit trail (the newest 50, in the browser) with the full debate and the PayPal order and capture IDs, plus a summary of how many payments the jury changed or rejected and how many dollars were requested but not approved.
 
 Example: a $1,188 yearly design-app plan that overlaps a tool you already pay for and eats 79% of your monthly budget. The jury rules MODIFY: start monthly. PayPal charges $99 instead of $1,188.
 

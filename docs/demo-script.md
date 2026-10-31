@@ -19,7 +19,7 @@
 | 1:45–2:10 | Payment panel → PayPal popup | Tick the confirmation, click **Continue to PayPal**, click the PayPal button, log in with the sandbox buyer, click Pay. | "I confirm, and PayPal opens for exactly $99, not $1,188. The server signed this approval, so nobody can change the amount in the browser." |
 | 2:10–2:20 | Receipt | Point at COMPLETED, order ID and capture ID. | "Captured in the PayPal sandbox, with the order and capture IDs saved to the audit trail." |
 | 2:20–2:35 | New review → Flash-sale course | Load **Flash-sale course** and run it; jump to the verdict (cut while streaming). | "Now a $400 'limited-time' course. The jury spots the pressure wording and the overlap, and rejects it. No PayPal button at all: $400 not spent." |
-| 2:35–2:50 | `/verdict/history` | Show the impact strip and the two entries with payment status. | "Every review is kept: the debate, the verdict and the PayPal receipt, plus how much the jury stopped. VerdictPay: argue it out before you pay." |
+| 2:35–2:50 | `/verdict/history` | Show the impact strip and the two entries with payment status. | "Each review is kept: the debate, the verdict and the PayPal receipt, plus how much the jury stopped. VerdictPay: argue it out before you pay." |
 
 **Spoken word count:** about 300 words, which fits 2:45 at a normal pace.
 

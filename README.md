@@ -13,7 +13,7 @@ AI decision support, not financial advice. Payments run in the PayPal **sandbox*
 3. **Five agents, in order.** Advocate (case for), Skeptic (case against), Budget Officer (affordability and lock-in), Analyst (the numbers), then the Presiding Judge, who sees every prior argument.
 4. **A structured verdict.** The judge returns schema-validated output: outcome, approved amount, required change (for MODIFY), key risks, confidence, risk score and a "reconsider if" condition. Server-side rules enforce the money logic regardless of what the model says: PROCEED pays the requested amount, MODIFY never pays more than requested, REJECT pays nothing.
 5. **You confirm, PayPal pays.** The server signs the approval. You tick an explicit confirmation, the PayPal button appears, and the server creates a PayPal order for exactly the signed amount and captures it after you approve in the PayPal popup. REJECT shows no button.
-6. **Audit trail.** Every review is saved in the browser with the decision, evidence, full debate, verdict and PayPal order and capture IDs. History shows how many payments the jury changed or rejected and how many dollars were requested but not approved.
+6. **Audit trail.** Each review is saved in the browser with the decision inputs, full debate, verdict and PayPal order and capture IDs; evidence is recomputed from the decision when a review is shown. History shows how many payments the jury changed or rejected and how many dollars were requested but not approved.
 
 ## How PayPal and AI are used
 
@@ -130,7 +130,7 @@ The full judge-facing script is in [`docs/demo-script.md`](docs/demo-script.md).
 
 - **Sandbox only.** The PayPal host is hard-wired to the sandbox; there is no live-payment mode.
 - **One-time charges.** MODIFY to "monthly billing" charges the first month as a one-time order; PayPal Subscriptions, refunds and webhooks are not implemented.
-- **Browser storage.** Decisions, verdicts and receipts live in the browser's localStorage; there are no accounts or server database. Use **Download Report Archive** on the history page to keep a copy.
+- **Browser storage.** Decisions, verdicts and receipts live in the browser's localStorage; there are no accounts or server database. History keeps the newest 50 reviews; older ones drop out of History, the impact summary and the archive export. Use **Download Report Archive** on the history page to keep a copy.
 - **Evidence comes only from your inputs.** VerdictPay does not look up prices, merchants or your PayPal transaction history.
 - **Approval window.** A signed approval expires after 30 minutes; after that, start a new review to pay.
 - **Function time.** The jury route is capped at 60 seconds (`maxDuration`); five sequential model calls on a slow model may need a higher limit on your hosting plan.

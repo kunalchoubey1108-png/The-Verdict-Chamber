@@ -89,7 +89,7 @@ export default function HistoryPage() {
         <header className="mb-10 pb-6 border-b-2 border-graphite">
           <div className="flex items-center gap-2 mb-2">
             <span className="decal-orange">AUDIT TRAIL</span>
-            <span className="font-mono text-xs text-fog uppercase">EVERY VERDICT, NEWEST FIRST</span>
+            <span className="font-mono text-xs text-fog uppercase">NEWEST 50 VERDICTS, NEWEST FIRST</span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -97,7 +97,7 @@ export default function HistoryPage() {
                 DECISION HISTORY
               </h1>
               <p className="font-sans text-fog text-sm sm:text-base max-w-xl leading-relaxed pt-1">
-                Every payment the jury reviewed: the request, the verdict, the approved amount and the full debate.
+                The payments the jury reviewed in this browser (newest 50): the request, the verdict, the approved amount and the full debate.
               </p>
             </div>
             <button
@@ -111,7 +111,7 @@ export default function HistoryPage() {
             </button>
           </div>
           <p id="archive-privacy-note" className="mt-3 text-xs text-fog">
-            The JSON archive includes saved analysis and evidence. It is generated in your browser; store and share the file carefully.
+            The JSON archive includes the decisions, jury debates, verdicts and payment receipts. It is generated in your browser; store and share the file carefully.
           </p>
           {exportError && <p role="alert" className="mt-2 text-xs text-cb-red">{exportError}</p>}
         </header>
