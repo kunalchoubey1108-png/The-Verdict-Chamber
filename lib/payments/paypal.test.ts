@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { captureOrder, createOrder, paypalConfigured } from "./paypal";
+import { captureOrder, createOrder } from "./paypal";
 import type { Approval } from "./approval";
 
 const approval: Approval = {
@@ -27,10 +27,14 @@ afterEach(() => {
 });
 
 describe("PayPal client", () => {
-  it("treats missing or placeholder credentials as not configured", () => {
+  // Runs first: later tests cache an OAuth token that would skip the credentials check.
+  it("refuses to call PayPal with placeholder credentials", async () => {
     vi.stubEnv("PAYPAL_CLIENT_ID", "your_paypal_sandbox_client_id_here");
     vi.stubEnv("PAYPAL_CLIENT_SECRET", "secret");
-    expect(paypalConfigured()).toBe(false);
+    const fetchMock = mockPayPal({});
+
+    await expect(createOrder(approval)).rejects.toMatchObject({ status: 503 });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("creates a sandbox order for exactly the approved amount with an idempotency key, then reuses the token", async () => {

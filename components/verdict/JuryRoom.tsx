@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
-import type { AgentMessage, VerdictCard as VerdictCardType, AgentId, JuryEvent, FullVerdict, PaymentRecord } from "@/lib/types/verdict";
+import type { AgentMessage, AgentId, JuryEvent, FullVerdict, PaymentRecord } from "@/lib/types/verdict";
 import type { MoneyDecision } from "@/lib/validation/decision";
 import { buildEvidence } from "@/lib/decision/evidence";
 import { AgentCard } from "./AgentCard";
@@ -44,13 +44,11 @@ export function JuryRoom({ decision }: JuryRoomProps) {
   const evidence = useMemo(() => buildEvidence(decision), [decision]);
   const [phase, setPhase] = useState<Phase>("deliberating");
   const [messages, setMessages] = useState<AgentMessage[]>([]);
-  const [verdictCard, setVerdictCard] = useState<VerdictCardType | null>(null);
   const [currentSpeaker, setCurrentSpeaker] = useState<AgentId | null>(null);
   const [speakerFilter, setSpeakerFilter] = useState<AgentId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
   const [record, setRecord] = useState<FullVerdict | null>(null);
-  const [approvalToken, setApprovalToken] = useState<string | null>(null);
 
   const handlePaid = useCallback((payment: PaymentRecord) => {
     setRecord((prev) => {
@@ -157,7 +155,6 @@ export function JuryRoom({ decision }: JuryRoomProps) {
           if (event.type === "verdict" && event.verdict) {
             receivedVerdict = true;
             setCurrentSpeaker(null);
-            setVerdictCard(event.verdict);
             setPhase("verdict");
 
             const fullVerdict: FullVerdict = {
@@ -170,7 +167,6 @@ export function JuryRoom({ decision }: JuryRoomProps) {
               approvalToken: event.approvalToken ?? null,
             };
             setRecord(fullVerdict);
-            setApprovalToken(event.approvalToken ?? null);
             if (!saveVerdict(fullVerdict)) {
               setPersistenceWarning("Verdict generated, but this browser could not save it. Check available site storage and keep this page open to review it.");
             }
@@ -283,18 +279,16 @@ export function JuryRoom({ decision }: JuryRoomProps) {
 
         {/* 4. SIDEBAR: Verdict HUD stays visible and works without hover */}
         <aside className="lg:sticky lg:top-24 min-w-0 space-y-4">
-          {verdictCard ? (
+          {record ? (
             <>
-              <VerdictCard verdict={verdictCard} decision={decision} />
-              {record && (
-                <PaymentPanel
-                  decision={decision}
-                  verdict={verdictCard}
-                  approvalToken={approvalToken}
-                  payment={record.payment}
-                  onPaid={handlePaid}
-                />
-              )}
+              <VerdictCard verdict={record.verdict} decision={decision} />
+              <PaymentPanel
+                decision={decision}
+                verdict={record.verdict}
+                approvalToken={record.approvalToken ?? null}
+                payment={record.payment}
+                onPaid={handlePaid}
+              />
             </>
           ) : (
             <div className="rounded-[18px] bg-carbon border-2 border-graphite p-6 text-center space-y-4" style={{ boxShadow: '4px 4px 0px 0px #262A34' }}>

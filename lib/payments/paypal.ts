@@ -19,8 +19,6 @@ function credentials(): { id: string; secret: string } | null {
   return { id, secret };
 }
 
-export const paypalConfigured = () => credentials() !== null;
-
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
 async function accessToken(): Promise<string> {
