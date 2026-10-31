@@ -1,30 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadDecision, loadVerdict, loadVerdictHistory, saveDecision, saveVerdict } from "./storage";
 import type { FullVerdict } from "@/lib/types/verdict";
-import type { MoneyDecision } from "@/lib/validation/decision";
+import { makeDecision, makeVerdictCard } from "@/lib/test/fixtures";
 
-const decision: MoneyDecision = {
-  id: "decision-1",
-  createdAt: "2026-10-25T00:00:00.000Z",
-  title: "Standing desk",
-  merchant: "Desk Co",
-  category: "hardware",
-  amount: 300,
-  billing: "one_time",
-  reason: "Back pain",
-  monthlyBudget: 1_000,
-  subscriptions: [],
-};
+const decision = makeDecision();
 
 const verdict: FullVerdict = {
   id: "verdict-1",
   createdAt: "2026-10-25T00:00:00.000Z",
   decision,
   deliberation: [{ agent: "judge", content: "Review complete.", timestamp: "2026-10-25T00:00:00.000Z", status: "done" }],
-  verdict: {
-    outcome: "MODIFY", confidence: 68, riskScore: 40, approvedAmount: 150,
-    modification: "Buy the smaller model.", dealBreaker: "Desk is returned.", summary: "Cheaper option.", keyRisks: [],
-  },
+  verdict: makeVerdictCard(),
 };
 
 function setupStorage(throws = false) {

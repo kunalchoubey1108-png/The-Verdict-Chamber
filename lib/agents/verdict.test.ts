@@ -2,19 +2,9 @@ import { describe, expect, it } from "vitest";
 import { normalizeVerdict, simulateVerdict, type JudgeOutput } from "./verdict";
 import { buildEvidence } from "@/lib/decision/evidence";
 import type { MoneyDecision } from "@/lib/validation/decision";
+import { makeDecision } from "@/lib/test/fixtures";
 
-const decision: MoneyDecision = {
-  id: "d-1",
-  createdAt: "2026-10-25T00:00:00.000Z",
-  title: "Design tool annual plan",
-  merchant: "Design Co",
-  category: "software",
-  amount: 1_188,
-  billing: "yearly",
-  reason: "Client work",
-  monthlyBudget: 5_000,
-  subscriptions: [],
-};
+const decision = makeDecision({ monthlyBudget: 5_000 });
 
 const judge = (overrides: Partial<JudgeOutput>): JudgeOutput => ({
   ruling: "ruling",

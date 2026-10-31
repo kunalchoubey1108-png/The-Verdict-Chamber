@@ -4,34 +4,13 @@ import { POST } from "./route";
 import { runJury } from "@/lib/agents/orchestrate";
 import { verifyApproval } from "@/lib/payments/approval";
 import type { JuryEvent, VerdictCard } from "@/lib/types/verdict";
+import { makeDecision, makeVerdictCard } from "@/lib/test/fixtures";
 
 // The jury itself is tested elsewhere; here we test the route's wiring.
 vi.mock("@/lib/agents/orchestrate", () => ({ runJury: vi.fn() }));
 
-const decision = {
-  id: "decision-1",
-  createdAt: "2026-10-25T00:00:00.000Z",
-  title: "  Design app  ",
-  merchant: "Acme Design Co.",
-  category: "software",
-  amount: 1_188,
-  billing: "yearly",
-  reason: "Client work",
-  monthlyBudget: 1_500,
-  subscriptions: [],
-};
-
-const verdict = (overrides: Partial<VerdictCard>): VerdictCard => ({
-  outcome: "MODIFY",
-  confidence: 68,
-  riskScore: 55,
-  approvedAmount: 99,
-  modification: "Monthly billing",
-  dealBreaker: "x",
-  summary: "y",
-  keyRisks: [],
-  ...overrides,
-});
+// Padded title: the route must sign the schema-trimmed decision, not the raw body.
+const decision = makeDecision({ title: "  Design app  " });
 
 function juryEmits(v: VerdictCard) {
   vi.mocked(runJury).mockImplementation(async (_d, _e, onEvent) => {
@@ -59,7 +38,7 @@ afterEach(() => vi.unstubAllEnvs());
 
 describe("POST /api/jury", () => {
   it("signs the verdict for the approved amount and the server-parsed decision, then ends with [DONE]", async () => {
-    juryEmits(verdict({ outcome: "MODIFY", approvedAmount: 99 }));
+    juryEmits(makeVerdictCard({ outcome: "MODIFY", approvedAmount: 99 }));
     const { res, lines, events } = await postJury({ decision });
 
     expect(res.headers.get("Content-Type")).toBe("text/event-stream");
@@ -76,7 +55,7 @@ describe("POST /api/jury", () => {
   });
 
   it("issues no approval for a REJECT verdict", async () => {
-    juryEmits(verdict({ outcome: "REJECT", approvedAmount: 0, modification: "" }));
+    juryEmits(makeVerdictCard({ outcome: "REJECT", approvedAmount: 0, modification: "" }));
     const { events } = await postJury({ decision });
 
     expect(events.find((e) => e.type === "verdict")?.approvalToken).toBeNull();

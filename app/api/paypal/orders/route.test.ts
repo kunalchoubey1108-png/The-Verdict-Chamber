@@ -4,8 +4,7 @@ import { POST as createOrderRoute } from "./route";
 import { POST as captureRoute } from "./[id]/capture/route";
 import { captureOrder, createOrder, PayPalError } from "@/lib/payments/paypal";
 import { signApproval } from "@/lib/payments/approval";
-import type { VerdictCard } from "@/lib/types/verdict";
-import type { MoneyDecision } from "@/lib/validation/decision";
+import { makeDecision, makeVerdictCard } from "@/lib/test/fixtures";
 
 vi.mock("@/lib/payments/paypal", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/payments/paypal")>()),
@@ -13,29 +12,9 @@ vi.mock("@/lib/payments/paypal", async (importOriginal) => ({
   captureOrder: vi.fn(),
 }));
 
-const decision: MoneyDecision = {
-  id: "decision-1",
-  createdAt: "2026-10-25T00:00:00.000Z",
-  title: "Design app",
-  merchant: "Acme Design Co.",
-  category: "software",
-  amount: 1_188,
-  billing: "yearly",
-  reason: "Client work",
-  monthlyBudget: 1_500,
-  subscriptions: [],
-};
+const decision = makeDecision();
 
-const modify: VerdictCard = {
-  outcome: "MODIFY",
-  confidence: 68,
-  riskScore: 55,
-  approvedAmount: 99,
-  modification: "Monthly billing",
-  dealBreaker: "x",
-  summary: "y",
-  keyRisks: [],
-};
+const modify = makeVerdictCard();
 
 const postOrder = (body: unknown) =>
   createOrderRoute(

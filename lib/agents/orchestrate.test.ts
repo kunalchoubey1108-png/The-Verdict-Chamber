@@ -3,6 +3,7 @@ import { runJury } from "./orchestrate";
 import { buildEvidence, type DecisionEvidence } from "@/lib/decision/evidence";
 import type { JuryEvent } from "@/lib/types/verdict";
 import type { MoneyDecision } from "@/lib/validation/decision";
+import { makeDecision } from "@/lib/test/fixtures";
 
 describe("runJury cancellation", () => {
   it("returns without starting jury work when the client is already disconnected", async () => {
@@ -18,18 +19,7 @@ describe("runJury cancellation", () => {
 });
 
 describe("runJury when live Gemini calls fail", () => {
-  const decision: MoneyDecision = {
-    id: "d-1",
-    createdAt: "2026-10-25T00:00:00.000Z",
-    title: "Ergonomic keyboard",
-    merchant: "KeyWorks",
-    category: "hardware",
-    amount: 129,
-    billing: "one_time",
-    reason: "Wrist pain",
-    monthlyBudget: 800,
-    subscriptions: [],
-  };
+  const decision = makeDecision({ title: "Ergonomic keyboard", category: "hardware", amount: 129, billing: "one_time", monthlyBudget: 800 });
 
   afterEach(() => {
     vi.useRealTimers();

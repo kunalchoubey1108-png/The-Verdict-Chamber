@@ -1,32 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signApproval, verifyApproval } from "./approval";
 import { approvalExpired } from "./approvalExpiry";
-import type { VerdictCard } from "@/lib/types/verdict";
-import type { MoneyDecision } from "@/lib/validation/decision";
+import { makeDecision, makeVerdictCard } from "@/lib/test/fixtures";
 
-const decision: MoneyDecision = {
-  id: "decision-1",
-  createdAt: "2026-10-25T00:00:00.000Z",
-  title: "Design app",
-  merchant: "Acme Design Co.",
-  category: "software",
-  amount: 1_188,
-  billing: "yearly",
-  reason: "Client work",
-  monthlyBudget: 1_500,
-  subscriptions: [],
-};
+const decision = makeDecision();
 
-const verdict: VerdictCard = {
-  outcome: "MODIFY",
-  confidence: 68,
-  riskScore: 55,
-  approvedAmount: 99,
-  modification: "Monthly billing",
-  dealBreaker: "x",
-  summary: "y",
-  keyRisks: [],
-};
+const verdict = makeVerdictCard();
 
 const NOW = 1_800_000_000_000;
 
