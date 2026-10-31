@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { MoneyDecision } from "@/lib/validation/decision";
 import { BILLING_LABELS } from "@/lib/validation/decision";
-import { findVerdictForDecision, loadDecision } from "@/lib/utils/storage";
+import { deleteVerdict, findVerdictForDecision, loadDecision } from "@/lib/utils/storage";
+import { approvalExpired } from "@/lib/payments/approvalExpiry";
+import { PAYPAL_READY } from "@/components/verdict/PaymentPanel";
 import { fmtUSD } from "@/lib/utils/format";
 import { JuryRoom } from "@/components/verdict/JuryRoom";
 
@@ -17,11 +19,16 @@ export default function ReviewRoomPage() {
 
   useEffect(() => {
     if (!id) return;
-    // Already ruled on: show the saved review instead of re-running the jury.
+    // Already ruled on: show the saved review instead of re-running the jury,
+    // unless its PayPal approval expired unpaid — then replace it with a fresh review.
     const saved = findVerdictForDecision(id);
     if (saved) {
-      router.replace(`/verdict/history/${saved.id}`);
-      return;
+      const stale = PAYPAL_READY && !saved.payment && approvalExpired(saved.approvalToken);
+      if (!stale) {
+        router.replace(`/verdict/history/${saved.id}`);
+        return;
+      }
+      deleteVerdict(saved.id);
     }
     const d = loadDecision(id);
     if (d) setDecision(d);

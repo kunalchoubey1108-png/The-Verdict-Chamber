@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { signApproval, verifyApproval } from "./approval";
+import { approvalExpired } from "./approvalExpiry";
 import type { VerdictCard } from "@/lib/types/verdict";
 import type { MoneyDecision } from "@/lib/validation/decision";
 
@@ -64,5 +65,18 @@ describe("payment approvals", () => {
   it("rejects malformed tokens", () => {
     expect(verifyApproval("not-a-token")).toBeNull();
     expect(verifyApproval("a.b.c")).toBeNull();
+  });
+});
+
+describe("approvalExpired (browser-side display check)", () => {
+  it("reads the expiry from a real token, including a non-ASCII title", () => {
+    const token = signApproval({ ...decision, title: "Design app Pro — annual plan" }, verdict, NOW)!;
+    expect(approvalExpired(token, NOW + 1_000)).toBe(false);
+    expect(approvalExpired(token, NOW + 31 * 60 * 1000)).toBe(true);
+  });
+
+  it("treats no token as not expired and an unreadable token as expired", () => {
+    expect(approvalExpired(null)).toBe(false);
+    expect(approvalExpired("garbage")).toBe(true);
   });
 });

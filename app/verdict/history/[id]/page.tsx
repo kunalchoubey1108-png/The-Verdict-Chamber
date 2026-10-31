@@ -17,6 +17,7 @@ export default function SavedVerdictPage() {
   const { id } = useParams<{ id: string }>();
   const [record, setRecord] = useState<FullVerdict | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [persistenceWarning, setPersistenceWarning] = useState<string | null>(null);
 
   useEffect(() => {
     setRecord(loadVerdict(id));
@@ -27,7 +28,9 @@ export default function SavedVerdictPage() {
     setRecord((prev) => {
       if (!prev) return prev;
       const updated = { ...prev, payment };
-      saveVerdict(updated);
+      if (!saveVerdict(updated)) {
+        setPersistenceWarning("Payment completed, but this browser could not save the receipt. Note the PayPal IDs shown.");
+      }
       return updated;
     });
   }, []);
@@ -71,6 +74,9 @@ export default function SavedVerdictPage() {
         </header>
 
         {record.deliberation.some((m) => m.simulated) && <DemoJuryNotice />}
+        {persistenceWarning && (
+          <p className="rounded-lg border border-cb-amber/50 bg-cb-amber/10 p-3 text-sm text-cb-amber" role="status">{persistenceWarning}</p>
+        )}
 
         <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(0,370px)] items-start">
           <EvidencePanel decision={decision} evidence={buildEvidence(decision)} />

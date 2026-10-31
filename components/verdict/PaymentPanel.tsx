@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import type { PaymentRecord, VerdictCard } from "@/lib/types/verdict";
+import { approvalExpired } from "@/lib/payments/approvalExpiry";
 import type { MoneyDecision } from "@/lib/validation/decision";
 import { fmtDateTime, fmtUSD } from "@/lib/utils/format";
 
@@ -22,7 +24,7 @@ interface PayPalNamespace {
 }
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
-const PAYPAL_READY = CLIENT_ID !== "" && !CLIENT_ID.startsWith("your_");
+export const PAYPAL_READY = CLIENT_ID !== "" && !CLIENT_ID.startsWith("your_");
 
 let sdkPromise: Promise<PayPalNamespace> | null = null;
 function loadPayPal(): Promise<PayPalNamespace> {
@@ -119,6 +121,10 @@ export function PaymentPanel({ decision, verdict, approvalToken, payment, onPaid
               const r = await postJson<{ orderId: string; status: string; captureId: string | null; amount: string | null }>(
                 `/api/paypal/orders/${encodeURIComponent(orderID)}/capture`
               );
+              if (r.status !== "COMPLETED") {
+                setError(`PayPal returned ${r.status} for order ${r.orderId}, so this payment was not recorded as paid. Check the PayPal sandbox account before trying again.`);
+                return;
+              }
               onPaid({
                 status: r.status,
                 amount: r.amount ? Number(r.amount) : amount,
@@ -127,7 +133,10 @@ export function PaymentPanel({ decision, verdict, approvalToken, payment, onPaid
                 at: new Date().toISOString(),
               });
             } catch (e) {
-              setError(e instanceof Error ? e.message : "Could not capture the payment.");
+              // The buyer approved in PayPal, so the money may have moved even though we got no answer.
+              setError(
+                `${e instanceof Error ? e.message : "Could not capture the payment."} PayPal order ${orderID}: check the PayPal sandbox account before trying again, as you may already have been charged.`
+              );
             } finally {
               setBusy(false);
             }
@@ -153,6 +162,18 @@ export function PaymentPanel({ decision, verdict, approvalToken, payment, onPaid
         <div className="font-tech text-[10px] font-bold uppercase tracking-wider text-cb-red">No payment</div>
         <p className="text-sm text-bone">The jury rejected this decision, so no PayPal order can be created.</p>
         <p className="font-mono text-xs text-fog">{fmtUSD(decision.amount)} not spent.</p>
+      </section>
+    );
+  }
+
+  if (PAYPAL_READY && approvalExpired(approvalToken)) {
+    return (
+      <section className="rounded-[18px] border-2 border-cb-amber/40 bg-cb-amber/10 p-5 space-y-2" aria-label="Payment">
+        <div className="font-tech text-[10px] font-bold uppercase tracking-wider text-cb-amber">Approval expired</div>
+        <p className="text-sm text-bone">Jury approvals last 30 minutes. Run the review again to pay.</p>
+        <Link href={`/verdict/${decision.id}`} className="neo-btn-primary inline-flex text-xs">
+          Run the review again →
+        </Link>
       </section>
     );
   }
