@@ -1,10 +1,10 @@
-# README.ai — VerdictPay (hackathon branch)
+# README.ai — ArbiterAI (hackathon branch)
 
 This file is a working guide for coding agents. Prefer the source code and `package.json` as the source of truth when they disagree with prose docs. The original stock-research app (The Verdict Chamber) lives on `main`; do not change `main` unless explicitly asked.
 
 ## Project at a glance
 
-VerdictPay is a Next.js 15 / React 19 / TypeScript app. A user describes a money decision (purchase, subscription or invoice). The server computes deterministic evidence, a sequential five-agent jury (Advocate, Skeptic, Budget Officer, Analyst, Judge) streams its deliberation over server-sent events, and the judge returns a structured PROCEED / MODIFY / REJECT verdict. An approved verdict is paid through the PayPal sandbox (Orders v2 + JS SDK) for exactly the approved amount, after explicit user confirmation.
+ArbiterAI is a Next.js 15 / React 19 / TypeScript app. A user describes a money decision (purchase, subscription or invoice). The server computes deterministic evidence, a sequential five-agent jury (Advocate, Skeptic, Budget Officer, Analyst, Judge) streams its deliberation over server-sent events, and the judge returns a structured PROCEED / MODIFY / REJECT verdict. An approved verdict is paid through the PayPal sandbox (Orders v2 + JS SDK) for exactly the approved amount, after explicit user confirmation.
 
 ## Setup and commands
 
@@ -29,7 +29,7 @@ VerdictPay is a Next.js 15 / React 19 / TypeScript app. A user describes a money
 - `lib/agents/verdict.ts` — judge schema, `normalizeVerdict` (money rules), `simulateVerdict` (demo judge).
 - `lib/payments/approval.ts` — HMAC-signed, expiring approvals.
 - `lib/payments/paypal.ts` — Orders v2 client (sandbox host only), cached OAuth token, `PayPal-Request-Id` idempotency.
-- `lib/utils/storage.ts` — localStorage persistence under `vp.*`, validated on read.
+- `lib/utils/storage.ts` — localStorage persistence under `arbiter.*`, validated on read.
 - `components/verdict/` — `DecisionForm`, `EvidencePanel`, `JuryRoom`, `AgentCard`, `JurorRail`, `VerdictCard`, `PaymentPanel`.
 
 ## Invariants to preserve

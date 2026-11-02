@@ -1,8 +1,8 @@
-# VerdictPay — an AI jury for every payment
+# ArbiterAI — an AI jury for every payment
 
-> **Hackathon branch.** VerdictPay is the entry for **Build What's Next with PayPal and AI**, built on top of The Verdict Chamber. The original project is preserved unchanged on the [`main` branch](https://github.com/kunalchoubey1108-png/The-Verdict-Chamber/tree/main).
+> **Hackathon branch.** ArbiterAI is the entry for **Build What's Next with PayPal and AI**, built on top of The Verdict Chamber. The original project is preserved unchanged on the [`main` branch](https://github.com/kunalchoubey1108-png/The-Verdict-Chamber/tree/main).
 
-VerdictPay puts an adversarial AI jury between you and the checkout button. Describe a purchase, subscription or invoice. Four AI counsel argue it out over computed evidence, a judge rules **PROCEED**, **MODIFY** or **REJECT**, and PayPal then charges only the amount the jury approved, and only after you confirm.
+ArbiterAI puts an adversarial AI jury between you and the checkout button. Describe a purchase, subscription or invoice. Four AI counsel argue it out over computed evidence, a judge rules **PROCEED**, **MODIFY** or **REJECT**, and PayPal then charges only the amount the jury approved, and only after you confirm.
 
 AI decision support, not financial advice. Payments run in the PayPal **sandbox**.
 
@@ -131,7 +131,7 @@ The full judge-facing script is in [`docs/demo-script.md`](docs/demo-script.md).
 - **Sandbox only.** The PayPal host is hard-wired to the sandbox; there is no live-payment mode.
 - **One-time charges.** MODIFY to "monthly billing" charges the first month as a one-time order; PayPal Subscriptions, refunds and webhooks are not implemented.
 - **Browser storage.** Decisions, verdicts and receipts live in the browser's localStorage; there are no accounts or server database. History keeps the newest 50 reviews; older ones drop out of History, the impact summary and the archive export. Use **Download Report Archive** on the history page to keep a copy.
-- **Evidence comes only from your inputs.** VerdictPay does not look up prices, merchants or your PayPal transaction history.
+- **Evidence comes only from your inputs.** ArbiterAI does not look up prices, merchants or your PayPal transaction history.
 - **Approval window.** A signed approval expires after 30 minutes; after that, start a new review to pay.
 - **Function time.** The jury route is capped at 60 seconds (`maxDuration`); five sequential model calls on a slow model may need a higher limit on your hosting plan.
 
@@ -140,11 +140,11 @@ The full judge-facing script is in [`docs/demo-script.md`](docs/demo-script.md).
 - PayPal Subscriptions for approved recurring plans, and refunds for reversed decisions
 - Webhooks to reconcile payment status server-side
 - Pulling real context from PayPal transaction history to spot recurring spend
-- Letting AI shopping agents call VerdictPay as a guardrail before they spend
+- Letting AI shopping agents call ArbiterAI as a guardrail before they spend
 
 ## The original project
 
-The Verdict Chamber, on `main`, is a pre-trade stock research app: submit an investment thesis and a five-role jury (Bull, Bear, Risk, Quant, Judge) reviews it against market evidence. VerdictPay keeps its core idea, a structured adversarial AI review, and points it at everyday payments with PayPal executing the outcome.
+The Verdict Chamber, on `main`, is a pre-trade stock research app: submit an investment thesis and a five-role jury (Bull, Bear, Risk, Quant, Judge) reviews it against market evidence. ArbiterAI keeps its core idea, a structured adversarial AI review, and points it at everyday payments with PayPal executing the outcome.
 
 - Browse the original: https://github.com/kunalchoubey1108-png/The-Verdict-Chamber/tree/main
 - See every hackathon change: `git diff main...hackathon`

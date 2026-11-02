@@ -1,10 +1,10 @@
-# VerdictPay — pitch deck outline
+# ArbiterAI — pitch deck outline
 
 The hackathon page does not publish weighted judging criteria. This outline maps each slide to what it does state: projects must **meaningfully use PayPal**, **meaningfully use AI**, show a **working prototype** and be **well documented**, with special awards for **creativity, impact and execution**. Replace the mapping if the official criteria are published.
 
 | # | Slide | Content | Maps to |
 | --- | --- | --- | --- |
-| 1 | **VerdictPay** | "An AI jury for every payment." One screenshot of a MODIFY verdict: $1,188 requested, $99 approved. | Creativity |
+| 1 | **ArbiterAI** | "An AI jury for every payment." One screenshot of a MODIFY verdict: $1,188 requested, $99 approved. | Creativity |
 | 2 | **The problem** | Bad spending is rarely fraud. It's duplicate tools, annual prepays and "offer ends tonight". Checkout is one click and nobody argues the other side. | Impact |
 | 3 | **The idea** | Put adversarial review between the decision and the payment, and let the payment rail enforce the verdict. Built on The Verdict Chamber's five-agent stock-research jury. | Creativity |
 | 4 | **How it works** | Decision → computed evidence → Advocate, Skeptic, Budget Officer, Analyst → Judge → you confirm → PayPal charges the approved amount → audit trail. Use the architecture diagram from the README. | Execution |

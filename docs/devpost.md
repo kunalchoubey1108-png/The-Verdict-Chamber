@@ -1,4 +1,4 @@
-# VerdictPay — Devpost submission text
+# ArbiterAI — Devpost submission text
 
 Copy each section into the matching Devpost field. Replace the bracketed items before submitting.
 
@@ -18,7 +18,7 @@ The Verdict Chamber, the project this builds on, already had a five-agent AI jur
 
 You describe a money decision: what it is, who gets paid, the amount, how it bills, why, plus your monthly budget and current subscriptions.
 
-1. VerdictPay computes the evidence from your inputs: amount due now, first-year cost, share of your budget, money left afterwards, overlap with existing subscriptions and urgency wording.
+1. ArbiterAI computes the evidence from your inputs: amount due now, first-year cost, share of your budget, money left afterwards, overlap with existing subscriptions and urgency wording.
 2. Four AI counsel argue in order (Advocate, Skeptic, Budget Officer, Analyst), each seeing the arguments before it.
 3. A Presiding Judge rules **PROCEED**, **MODIFY** or **REJECT**, with the approved amount, required change, key risks and a "reconsider if" condition.
 4. If the jury approves, you confirm the exact amount and payee, and PayPal charges only that approved amount. A rejected payment never gets a PayPal button.
@@ -53,12 +53,12 @@ Example: a $1,188 yearly design-app plan that overlaps a tool you already pay fo
 - Agentic payments need a contract between the AI layer and the payment layer: signed, scoped, expiring permissions, not "the model said so".
 - Structured output plus deterministic guard rails beats prompt engineering alone for anything that touches money.
 
-## What's next for VerdictPay
+## What's next for ArbiterAI
 
 - PayPal Subscriptions for approved recurring plans, and refunds for reversed decisions
 - Webhooks for server-side payment reconciliation
 - Using PayPal transaction history as evidence to spot recurring spend
-- An API so AI shopping agents can ask VerdictPay for a verdict before they spend
+- An API so AI shopping agents can ask ArbiterAI for a verdict before they spend
 
 ## Built with
 
