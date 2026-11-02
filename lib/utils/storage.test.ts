@@ -47,8 +47,8 @@ describe("local storage persistence", () => {
     const values = setupStorage();
 
     expect(saveVerdict(verdict)).toBe(true);
-    expect(values.has("vp.verdict.verdict-1")).toBe(true);
-    expect(JSON.parse(values.get("vp.history") ?? "[]")).toEqual(["verdict-1"]);
+    expect(values.has("arbiter.verdict.verdict-1")).toBe(true);
+    expect(JSON.parse(values.get("arbiter.history") ?? "[]")).toEqual(["verdict-1"]);
     expect(loadVerdict("verdict-1")).toEqual(verdict);
   });
 
@@ -61,8 +61,8 @@ describe("local storage persistence", () => {
 
   it("ignores malformed history and verdict records without crashing", () => {
     const values = setupStorage();
-    values.set("vp.history", JSON.stringify({ unexpected: true }));
-    values.set("vp.verdict.broken", JSON.stringify({ id: "broken" }));
+    values.set("arbiter.history", JSON.stringify({ unexpected: true }));
+    values.set("arbiter.verdict.broken", JSON.stringify({ id: "broken" }));
 
     expect(loadVerdictHistory()).toEqual([]);
     expect(loadVerdict("broken")).toBeNull();

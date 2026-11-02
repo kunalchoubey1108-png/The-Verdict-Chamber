@@ -16,7 +16,7 @@ describe("verdict archive export", () => {
     const archive = JSON.parse(createVerdictArchive([record], "2026-10-26T00:00:00.000Z"));
 
     expect(archive).toEqual({
-      format: "verdictpay-archive",
+      format: "arbiter-ai-archive",
       version: VERDICT_ARCHIVE_VERSION,
       exportedAt: "2026-10-26T00:00:00.000Z",
       records: [record],

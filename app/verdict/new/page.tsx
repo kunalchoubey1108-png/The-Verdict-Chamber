@@ -2,7 +2,7 @@ import Link from "next/link";
 import { DecisionForm } from "@/components/verdict/DecisionForm";
 
 export const metadata = {
-  title: "Review a Payment — VerdictPay",
+  title: "Review a Payment — ArbiterAI",
   description: "Describe a purchase, subscription or invoice and let a five-agent AI jury review it before you pay.",
 };
 
@@ -14,9 +14,9 @@ export default function NewDecisionPage() {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-cb-orange text-black font-tech font-bold text-sm flex items-center justify-center border-2 border-black rounded-sm shadow-brutal">
-              VP
+              A
             </div>
-            <span className="font-display text-2xl tracking-wide text-paper-white">VERDICTPAY</span>
+            <span className="font-display text-2xl tracking-wide text-paper-white">ARBITERAI</span>
           </Link>
           <span className="text-graphite">/</span>
           <span className="decal-orange text-[9px]">NEW REVIEW</span>

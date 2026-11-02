@@ -49,7 +49,7 @@ describe("PayPal client", () => {
     const [url, init] = orderCalls[0] as unknown as [string, RequestInit];
     const headers = init.headers as Record<string, string>;
     expect(url).toBe("https://api-m.sandbox.paypal.com/v2/checkout/orders");
-    expect(headers["PayPal-Request-Id"]).toBe("vp-order-decision-1-99.00");
+    expect(headers["PayPal-Request-Id"]).toBe("arbiter-order-decision-1-99.00");
     expect(JSON.parse(init.body as string).purchase_units[0].amount).toEqual({ currency_code: "USD", value: "99.00" });
     // One OAuth call for two orders: the access token is cached.
     expect(fetchMock.mock.calls.filter(([u]) => String(u).endsWith("/v1/oauth2/token"))).toHaveLength(1);

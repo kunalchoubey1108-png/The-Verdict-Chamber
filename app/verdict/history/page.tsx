@@ -30,7 +30,7 @@ export default function HistoryPage() {
       const blobUrl = URL.createObjectURL(new Blob([archive], { type: "application/json" }));
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = `verdictpay-archive-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `arbiter-ai-archive-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(blobUrl), 0);
     } catch {
@@ -64,10 +64,10 @@ export default function HistoryPage() {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-cb-orange text-black font-tech font-bold text-sm flex items-center justify-center border-2 border-black rounded-sm shadow-brutal">
-              VP
+              A
             </div>
             <span className="font-display text-2xl tracking-wide text-paper-white">
-              VERDICTPAY
+              ARBITERAI
             </span>
           </Link>
           <span className="text-graphite">/</span>

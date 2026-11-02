@@ -30,10 +30,10 @@ export default function HomePage() {
         <div className="max-w-[1280px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-cb-orange text-black font-tech font-black text-lg flex items-center justify-center border-2 border-black rounded-sm shadow-brutal">
-              VP
+              A
             </div>
             <div className="flex flex-col">
-              <span className="font-display tracking-wider text-2xl text-paper-white leading-none">VERDICTPAY</span>
+              <span className="font-display tracking-wider text-2xl text-paper-white leading-none">ARBITERAI</span>
               <span className="font-mono text-[9px] uppercase tracking-widest text-cb-orange font-semibold">
                 AN AI JURY FOR EVERY PAYMENT
               </span>
@@ -57,7 +57,7 @@ export default function HomePage() {
             <span className="text-cb-orange">before</span> you pay.
           </h1>
           <p className="font-sans text-fog text-base sm:text-lg max-w-xl leading-relaxed">
-            VerdictPay puts an adversarial AI jury between you and the checkout button. Five agents debate every
+            ArbiterAI puts an adversarial AI jury between you and the checkout button. Five agents debate every
             purchase, subscription or invoice, and only the amount the jury and you approve can be paid.
           </p>
           <div className="pt-2 flex flex-wrap items-center gap-4">

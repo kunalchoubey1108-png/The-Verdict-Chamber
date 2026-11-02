@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "VerdictPay — An AI jury for every payment",
+  title: "ArbiterAI — An AI jury for every payment",
   description:
     "Five AI agents debate a purchase, subscription or invoice before you pay. PayPal executes only what the jury and you approve.",
 };

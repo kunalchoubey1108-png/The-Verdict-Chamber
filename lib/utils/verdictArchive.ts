@@ -8,7 +8,7 @@ export function createVerdictArchive(
 ): string {
   return JSON.stringify(
     {
-      format: "verdictpay-archive",
+      format: "arbiter-ai-archive",
       version: VERDICT_ARCHIVE_VERSION,
       exportedAt,
       records,

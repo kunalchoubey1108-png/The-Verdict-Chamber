@@ -71,7 +71,7 @@ export async function createOrder(a: Approval): Promise<string> {
         },
       ],
     },
-    `vp-order-${a.decisionId}-${amount}`
+    `arbiter-order-${a.decisionId}-${amount}`
   );
   return order.id;
 }
@@ -91,7 +91,7 @@ interface CaptureResponse {
 
 /** Capture a buyer-approved order. */
 export async function captureOrder(orderId: string): Promise<CaptureResult> {
-  const r = await post<CaptureResponse>(`/v2/checkout/orders/${orderId}/capture`, {}, `vp-capture-${orderId}`);
+  const r = await post<CaptureResponse>(`/v2/checkout/orders/${orderId}/capture`, {}, `arbiter-capture-${orderId}`);
   const capture = r.purchase_units?.[0]?.payments?.captures?.[0];
   return {
     orderId: r.id,

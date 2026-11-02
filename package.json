@@ -1,8 +1,8 @@
 {
-  "name": "verdictpay",
+  "name": "arbiter-ai",
   "version": "2.0.0",
   "private": true,
-  "description": "VerdictPay — an adversarial AI jury that reviews a payment before PayPal executes it. Built from The Verdict Chamber.",
+  "description": "ArbiterAI — an adversarial AI jury that reviews a payment before PayPal executes it. Built from The Verdict Chamber.",
   "engines": {
     "node": ">=22.12.0"
   },

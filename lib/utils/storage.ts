@@ -1,12 +1,12 @@
-// ── localStorage persistence for VerdictPay ──────────────────────────────────
-// Namespaced under "vp." so records from the original stock app ("vc.*")
+// ── localStorage persistence for ArbiterAI ──────────────────────────────────
+// Namespaced under "arbiter." so records from the original stock app ("vc.*")
 // are never misread as payment decisions.
 
 import type { FullVerdict } from "@/lib/types/verdict";
 import { z } from "zod";
 import { decisionSchema, type MoneyDecision } from "@/lib/validation/decision";
 
-const PREFIX = "vp.";
+const PREFIX = "arbiter.";
 const HISTORY_KEY = PREFIX + "history"; // string[] of verdict IDs, newest first
 const DECISION_PREFIX = PREFIX + "decision.";
 const VERDICT_PREFIX = PREFIX + "verdict.";

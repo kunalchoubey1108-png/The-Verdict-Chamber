@@ -41,9 +41,9 @@ export default function ReviewRoomPage() {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-cb-orange text-black font-tech font-bold text-sm flex items-center justify-center border-2 border-black rounded-sm shadow-brutal">
-              VP
+              A
             </div>
-            <span className="font-display text-2xl tracking-wide text-paper-white">VERDICTPAY</span>
+            <span className="font-display text-2xl tracking-wide text-paper-white">ARBITERAI</span>
           </Link>
           <span className="text-graphite">/</span>
           <span className="decal-orange text-[9px]">REVIEW IN SESSION</span>
