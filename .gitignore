@@ -4,6 +4,9 @@
 .agents/
 skills-lock.json
 
+# /brag launch-video output (video, poster, intermediate frames) — never committed
+brag-output/
+
 # pitch deck & PPT — local only, never committed
 pitch/
 tools/capture-shots.py
