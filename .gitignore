@@ -4,8 +4,8 @@
 .agents/
 skills-lock.json
 
-# /brag launch-video output (video, poster, intermediate frames) — never committed
-brag-output/
+# /brag launch-video output, incl. timestamped runs (video, poster, frames) — never committed
+brag-output*/
 
 # pitch deck & PPT — local only, never committed
 pitch/
